@@ -17,10 +17,24 @@ export const blobConfigured = () => !!process.env.BLOB_READ_WRITE_TOKEN;
 /** Where an agreement's documents live; uploads outside this prefix are refused. */
 export const agreementFolder = (agreementId: string) => `agreements/${agreementId}/`;
 
-/** Size and type of a blob the browser uploaded directly, or null if it is not there. */
+/**
+ * A browser-chosen blob path is trusted only in its plainest form: this agreement's folder
+ * and one file name of letters, digits, dot, underscore and dash (what safeName produces,
+ * plus Blob's random suffix). No percent-escapes, slashes or dot-only names that storage
+ * could resolve to another agreement's file.
+ */
+export function isAgreementBlobPath(agreementId: string, pathname: string) {
+  const folder = agreementFolder(agreementId);
+  if (!pathname.startsWith(folder)) return false;
+  const name = pathname.slice(folder.length);
+  return /^[\p{L}\p{N}._-]{1,200}$/u.test(name) && !/^\.+$/.test(name);
+}
+
+/** Size and type of a blob the browser uploaded directly, or null if it is not exactly there. */
 export async function blobInfo(pathname: string) {
   const info = await head(pathname).catch(() => null);
-  return info ? { size: info.size, contentType: info.contentType } : null;
+  if (!info || info.pathname !== pathname) return null;
+  return { size: info.size, contentType: info.contentType };
 }
 
 function safeName(name: string) {

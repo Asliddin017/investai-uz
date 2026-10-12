@@ -1,7 +1,7 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { badRequest, forbidden, withUser } from "@/lib/api";
 import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
-import { agreementFolder, blobConfigured, MAX_UPLOAD_BYTES } from "@/lib/storage";
+import { blobConfigured, isAgreementBlobPath, MAX_UPLOAD_BYTES } from "@/lib/storage";
 
 /**
  * Files go from the browser straight to Vercel Blob: a serverless function refuses
@@ -22,7 +22,7 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
     body,
     request: req,
     onBeforeGenerateToken: async (pathname) => {
-      if (!pathname.startsWith(agreementFolder(agreement.id)) || pathname.includes("..")) {
+      if (!isAgreementBlobPath(agreement.id, pathname)) {
         throw badRequest("Noto'g'ri fayl manzili");
       }
       return { maximumSizeInBytes: MAX_UPLOAD_BYTES, addRandomSuffix: true };

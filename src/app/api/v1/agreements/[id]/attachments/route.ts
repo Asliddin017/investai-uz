@@ -2,7 +2,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { badRequest, forbidden, withUser } from "@/lib/api";
 import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
-import { agreementFolder, blobInfo, MAX_UPLOAD_BYTES, saveFile } from "@/lib/storage";
+import { agreementFolder, blobInfo, isAgreementBlobPath, MAX_UPLOAD_BYTES, saveFile } from "@/lib/storage";
 import { audit } from "@/lib/audit";
 
 const directUploads = z.object({
@@ -27,7 +27,7 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   if (req.headers.get("content-type")?.includes("application/json")) {
     const { blobs } = directUploads.parse(await req.json());
     for (const b of blobs) {
-      if (!b.pathname.startsWith(agreementFolder(agreement.id)) || b.pathname.includes("..")) {
+      if (!isAgreementBlobPath(agreement.id, b.pathname)) {
         throw badRequest("Noto'g'ri fayl manzili");
       }
       const info = await blobInfo(b.pathname);
