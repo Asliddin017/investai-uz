@@ -53,3 +53,4 @@ next-env.d.ts
 /uploads
 npm-debug.log*
 !.env.example
+.seed-password.local
