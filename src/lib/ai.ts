@@ -1,8 +1,17 @@
 import { ApiError, GoogleGenAI } from "@google/genai";
 import * as z from "zod/v4";
 
-/** Gemini model for the analysis; override with GEMINI_MODEL when Google retires it. */
-export const AI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+/**
+ * Gemini models tried in order; the free tier often answers 503 "high demand", so a busy
+ * model hands over to the next one. Override with GEMINI_MODEL (comma-separated).
+ */
+export const AI_MODELS = (process.env.GEMINI_MODEL || "gemini-3.8-flash,gemini-3.6-flash,gemini-2.5-flash")
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+
+/** Overloaded, rate-limited or briefly failing: worth retrying or trying another model. */
+const TRANSIENT = [429, 500, 502, 503, 504];
 export const FALLBACK_MODEL = "heuristic";
 
 export type AnalysisInputItem = {
@@ -99,31 +108,42 @@ export async function analyzePlan(input: AnalysisInput): Promise<AnalysisResult>
   if (!apiKey) return heuristicAnalysis(input);
 
   const ai = new GoogleGenAI({ apiKey });
-  try {
-    const response = await ai.models.generateContent({
-      model: AI_MODEL,
-      contents: `Quyidagi safar rejalari va natijalarini tahlil qiling:
+  const startedAt = Date.now();
+  for (const model of AI_MODELS) {
+    // Leave room for the heuristic and the database work inside the route's 120 s limit.
+    if (Date.now() - startedAt > 60_000) break;
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: `Quyidagi safar rejalari va natijalarini tahlil qiling:
 
 ${JSON.stringify(input, null, 2)}`,
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-        responseMimeType: "application/json",
-        responseJsonSchema: responseSchema(),
-        httpOptions: { timeout: 60_000 },
-      },
-    });
-    const parsed = AnalysisSchema.safeParse(JSON.parse(response.text ?? ""));
-    if (!parsed.success) {
-      console.error("AI tahlil: javob sxemaga mos emas", parsed.error.issues[0]);
-      return heuristicAnalysis(input);
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          responseMimeType: "application/json",
+          responseJsonSchema: responseSchema(),
+          // One quick retry per model; a model that stays busy hands over to the next.
+          httpOptions: {
+            timeout: 25_000,
+            retryOptions: { attempts: 2, initialDelay: 2, maxDelay: 4, httpStatusCodes: TRANSIENT },
+          },
+        },
+      });
+      const parsed = AnalysisSchema.safeParse(JSON.parse(response.text ?? ""));
+      if (!parsed.success) {
+        console.error(`AI tahlil (${model}): javob sxemaga mos emas`, parsed.error.issues[0]);
+        continue;
+      }
+      return { ...parsed.data, score: Math.max(0, Math.min(100, Math.round(parsed.data.score))), model };
+    } catch (err) {
+      if (err instanceof ApiError) {
+        console.error(`AI tahlil xatosi (${model}, ${err.status}):`, err.message);
+        // A bad key or request fails the same way on every model.
+        if (!TRANSIENT.includes(err.status)) break;
+      } else {
+        console.error(`AI tahlil xatosi (${model}):`, err);
+      }
     }
-    return { ...parsed.data, score: Math.max(0, Math.min(100, Math.round(parsed.data.score))), model: AI_MODEL };
-  } catch (err) {
-    if (err instanceof ApiError) {
-      console.error(`AI tahlil xatosi (${err.status}):`, err.message);
-    } else {
-      console.error("AI tahlil xatosi:", err);
-    }
-    return heuristicAnalysis(input);
   }
+  return heuristicAnalysis(input);
 }
