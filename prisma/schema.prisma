@@ -31,6 +31,13 @@ enum Theme {
   SYSTEM
 }
 
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 enum OverrideState {
   GRANT
   DENY
@@ -106,6 +113,8 @@ model User {
   agreementUpdates AgreementUpdate[]
   attachments      Attachment[]
   analyses         AiAnalysis[]
+  nameRequests     NameChangeRequest[] @relation("NameRequester")
+  reviewedRequests NameChangeRequest[] @relation("NameReviewer")
 }
 
 model RolePermission {
@@ -293,4 +302,24 @@ model AiAnalysis {
   createdBy User @relation(fields: [createdById], references: [id])
 
   @@index([planId])
+}
+
+/// A user's request to change their full name; an administrator applies or rejects it.
+model NameChangeRequest {
+  id            String        @id @default(cuid())
+  userId        String
+  oldName       String
+  newName       String
+  reason        String?
+  status        RequestStatus @default(PENDING)
+  reviewerId    String?
+  reviewComment String?
+  createdAt     DateTime      @default(now())
+  reviewedAt    DateTime?
+
+  user     User  @relation("NameRequester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("NameReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId])
 }

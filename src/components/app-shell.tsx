@@ -6,6 +6,7 @@ import { useState, type ReactNode } from "react";
 import { api, cn } from "@/lib/client";
 import { useSession } from "./providers";
 import { MSIcon } from "./ui";
+import { usePendingNameRequests } from "./name-requests-panel";
 
 type NavItem = { href: string; label: string; icon: string; perm: string | string[] };
 
@@ -32,6 +33,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  const pendingNames = usePendingNameRequests(can("admin:users")).data?.length ?? 0;
+  const badges: Record<string, number> = { "/admin/users": pendingNames };
 
   const allowed = (perm: NavItem["perm"]) => (Array.isArray(perm) ? perm.some(can) : can(perm));
 
@@ -80,6 +84,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                       >
                         <MSIcon name={item.icon} className="text-[20px]" />
                         {item.label}
+                        {badges[item.href] > 0 && (
+                          <span
+                            className="ml-auto rounded-full bg-accent px-1.5 text-[11px] font-semibold text-white tabular-nums"
+                            title="Ko'rib chiqilmagan so'rovlar"
+                          >
+                            {badges[item.href]}
+                          </span>
+                        )}
                       </Link>
                     </li>
                   );

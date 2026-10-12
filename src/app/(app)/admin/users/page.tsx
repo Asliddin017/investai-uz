@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, formatDateTime } from "@/lib/client";
 import { useSession, useToast } from "@/components/providers";
+import { NameRequestsPanel } from "@/components/name-requests-panel";
 import { Badge, Button, Card, Dialog, ErrorBox, Field, Input, MSIcon, PageHeader, Select, Spinner } from "@/components/ui";
 
 type UserRow = {
@@ -158,6 +159,7 @@ export default function UsersPage() {
           </Button>
         }
       />
+      <NameRequestsPanel />
       <div className="relative mb-4 max-w-sm">
         <MSIcon name="search" className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-[18px] text-muted-foreground" />
         <Input className="pl-9" placeholder="Qidirish..." value={q} onChange={(e) => setQ(e.target.value)} />

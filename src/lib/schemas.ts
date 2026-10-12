@@ -150,3 +150,10 @@ export const passwordChangeInput = z
     message: "Yangi parol joriy paroldan farq qilsin",
     path: ["newPassword"],
   });
+
+export const nameRequestInput = z.object({
+  newName: personName,
+  reason: optionalText,
+});
+
+export const reviewInput = z.object({ comment: optionalText });

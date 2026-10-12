@@ -262,6 +262,30 @@ r = await admin("/admin/users");
 check("xodim o'z ismini o'zgartira olmaydi", r.data.find((u) => u.username === "tuman").fullName === "Yusupov Bekzod");
 await tuman("/profile/password", { method: "PUT", json: { currentPassword: "YangiParol123", newPassword: PASSWORD } });
 
+// 13. Name change goes through a request
+r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Yusupov Bekzod Akmalovich", reason: "Pasport" } });
+check("xodim ism so'rovi yuboradi", r.status === 200, JSON.stringify(r.data));
+const nameReqId = r.data.id;
+r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Boshqa Ism" } });
+check("bir vaqtda ikkita ochiq so'rov bo'lmaydi", r.status === 400, r.status);
+r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Кarimov Akmal" } });
+check("aralash alifboli ism qabul qilinmaydi", r.status === 400, r.status);
+r = await tuman(`/admin/name-requests/${nameReqId}/approve`, { method: "POST", json: {} });
+check("xodim o'z so'rovini tasdiqlay olmaydi", r.status === 403, r.status);
+r = await admin(`/admin/name-requests/${nameReqId}/approve`, { method: "POST", json: {} });
+check("admin so'rovni tasdiqlaydi", r.status === 200, JSON.stringify(r.data));
+r = await tuman("/profile");
+check("ism tasdiqdan keyin o'zgaradi", r.data.fullName === "Yusupov Bekzod Akmalovich", r.data.fullName);
+r = await admin(`/admin/name-requests/${nameReqId}/approve`, { method: "POST", json: {} });
+check("so'rov ikki marta tasdiqlanmaydi", r.status === 400, r.status);
+r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Yusupov Bekzod" } });
+r = await admin(`/admin/name-requests/${r.data.id}/reject`, { method: "POST", json: { comment: "Asl ism qaytarilmasin" } });
+check("admin so'rovni rad etadi", r.status === 200);
+await admin(`/admin/users/${tumanUser.id}`, {
+  method: "PUT",
+  json: { fullName: "Yusupov Bekzod", username: "tuman", role: "TUMAN_HOKIMI", position: "Tuman hokimi", departmentId: tumanUser.departmentId, isActive: true },
+});
+
 r = await approver("/dashboard");
 check("dashboard ishlaydi", r.status === 200 && typeof r.data.plansByStatus === "object");
 
