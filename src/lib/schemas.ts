@@ -137,7 +137,6 @@ export const rolesMatrixInput = z.object({
 });
 
 export const profileInput = z.object({
-  fullName: personName,
   position: optionalText,
   theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
 });

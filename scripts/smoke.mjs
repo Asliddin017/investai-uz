@@ -235,11 +235,11 @@ if (reported) {
 }
 
 // 12. Self-service profile
-r = await tuman("/profile", { method: "PUT", json: { fullName: "Yusupov Bekzod Akmalovich", position: "Tuman hokimi", theme: "DARK" } });
+r = await tuman("/profile", { method: "PUT", json: { position: "Tuman hokimi", theme: "DARK" } });
 check("xodim o'z profilini o'zgartiradi", r.status === 200);
 r = await tuman("/profile");
-check("profil saqlandi", r.data.fullName === "Yusupov Bekzod Akmalovich" && r.data.theme === "DARK");
-r = await tuman("/profile", { method: "PUT", json: { fullName: "Yusupov Bekzod", position: "Tuman hokimi", theme: "LIGHT", role: "SUPER_ADMIN" } });
+check("profil saqlandi", r.data.theme === "DARK" && r.data.position === "Tuman hokimi");
+r = await tuman("/profile", { method: "PUT", json: { position: "Tuman hokimi", theme: "LIGHT", role: "SUPER_ADMIN" } });
 r = await admin("/admin/users");
 check("profil orqali rol o'zgarmaydi", r.data.find((u) => u.username === "tuman").role === "TUMAN_HOKIMI");
 const staleTuman = await login("tuman");
@@ -257,12 +257,9 @@ r = await tuman("/profile");
 check("parol almashgach joriy sessiya ishlaydi", r.status === 200, r.status);
 r = await staleTuman("/profile");
 check("parol almashgach boshqa sessiyalar bekor bo'ladi", r.status === 401, r.status);
-r = await tuman("/profile", { method: "PUT", json: { fullName: "Karimov Akmal", theme: "LIGHT" } });
-check("boshqa xodimning ismini olib bo'lmaydi", r.status === 400, r.status);
-for (const spoof of ["karimov  akmal", "Кarimov Akmal", "Karimov​ Akmal", "KarimovㅤAkmal", "Каримов Акмал"]) {
-  r = await tuman("/profile", { method: "PUT", json: { fullName: spoof, theme: "LIGHT" } });
-  check(`o'xshash ism bilan aldab bo'lmaydi (${JSON.stringify(spoof)})`, r.status === 400, r.status);
-}
+r = await tuman("/profile", { method: "PUT", json: { fullName: "Karimov Akmal", position: "Tuman hokimi", theme: "LIGHT" } });
+r = await admin("/admin/users");
+check("xodim o'z ismini o'zgartira olmaydi", r.data.find((u) => u.username === "tuman").fullName === "Yusupov Bekzod");
 await tuman("/profile/password", { method: "PUT", json: { currentPassword: "YangiParol123", newPassword: PASSWORD } });
 
 r = await approver("/dashboard");

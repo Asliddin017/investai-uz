@@ -27,7 +27,6 @@ function ProfileForm({ profile }: { profile: Profile }) {
   const router = useRouter();
   const toast = useToast();
   const qc = useQueryClient();
-  const [fullName, setFullName] = useState(profile.fullName);
   const [position, setPosition] = useState(profile.position ?? "");
   const [theme, setTheme] = useState<Theme>(profile.theme);
 
@@ -43,7 +42,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
   }, [profile.theme]);
 
   const save = useMutation({
-    mutationFn: () => api("/profile", { method: "PUT", json: { fullName, position, theme } }),
+    mutationFn: () => api("/profile", { method: "PUT", json: { position, theme } }),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["profile"] });
       toast("Profil saqlandi");
@@ -57,8 +56,8 @@ function ProfileForm({ profile }: { profile: Profile }) {
       <CardHeader title="Shaxsiy ma'lumotlar" icon="badge" />
       <div className="space-y-5 p-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="F.I.Sh." required>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          <Field label="F.I.Sh." hint="Ismni administrator o'zgartiradi">
+            <Input value={profile.fullName} disabled />
           </Field>
           <Field label="Lavozimi">
             <Input value={position} onChange={(e) => setPosition(e.target.value)} />
@@ -172,7 +171,7 @@ export default function ProfilePage() {
           <span className="text-muted-foreground">Tashkilot:</span> <b>{data.departmentName ?? "—"}</b>
         </span>
         <span className="w-full text-xs text-muted-foreground">
-          Login, rol va tashkilotni faqat administrator o&apos;zgartiradi.
+          F.I.Sh., login, rol va tashkilotni faqat administrator o&apos;zgartiradi.
         </span>
       </Card>
       <ProfileForm profile={data} />
