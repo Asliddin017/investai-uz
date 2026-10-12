@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1930" viewBox="0 0 1240 1930" font-family="'Source Sans 3','Segoe UI',Arial,sans-serif">
+<defs>
+<marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/></marker>
+<marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#e8622c"/></marker>
+</defs>
+<rect width="1240" height="1930" fill="#ffffff"/>
+<text x="620.0" y="44" text-anchor="middle" font-size="26" font-weight="700" fill="#1f2d2d">Investitsiya safarlari monitoringi</text>
+<text x="620.0" y="72" text-anchor="middle" font-size="16" fill="#666">Viloyat hokimligi · rejadan kelishuv yakunigacha</text>
+<text x="60" y="112" font-size="15" font-weight="700" letter-spacing="1.5" fill="#2e7d32">1-BOSQICH · REJA TUZISH VA TASDIQLASH</text><line x1="60" y1="122" x2="1180" y2="122" stroke="#cfd8d3" stroke-width="1.5"/>
+<rect x="60" y="135" width="370" height="310" rx="16" fill="#f7faf9" stroke="#b9c6c0" stroke-width="1.5"/><rect x="60" y="135" width="230" height="32" rx="16" fill="#1f2d2d"/><text x="175" y="157" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">REJA TUZUVCHILAR</text>
+<polygon points="80.0,215 108.0,182.0 382.0,182.0 410.0,215 382.0,248.0 108.0,248.0" fill="#e4e4e4" stroke="#1f2d2d" stroke-width="2"/>
+<text x="245" y="220.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Viloyat apparati o'rinbosarlari</text>
+<path d="M410,215 L475,215" stroke="#2e7d32" stroke-width="2.2" fill="none"/>
+<polygon points="80.0,300 108.0,267.0 382.0,267.0 410.0,300 382.0,333.0 108.0,333.0" fill="#e4e4e4" stroke="#1f2d2d" stroke-width="2"/>
+<text x="245" y="305.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Boshqarma boshliqlari</text>
+<path d="M410,300 L475,300" stroke="#2e7d32" stroke-width="2.2" fill="none"/>
+<polygon points="80.0,385 108.0,352.0 382.0,352.0 410.0,385 382.0,418.0 108.0,418.0" fill="#e4e4e4" stroke="#1f2d2d" stroke-width="2"/>
+<text x="245" y="390.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Tuman/shahar hokimlari</text>
+<path d="M410,385 L475,385" stroke="#2e7d32" stroke-width="2.2" fill="none"/>
+<path d="M475,215 L475,385" stroke="#2e7d32" stroke-width="2.2" fill="none"/>
+<path d="M475,300 L568,300" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<ellipse cx="800" cy="300" rx="230" ry="56" fill="#e3f6f1" stroke="#1f2d2d" stroke-width="2"/>
+<text x="800" y="294.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Reja kiritiladi</text>
+<text x="800" y="316.9" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">nomi · maqsadi · muddati · yo'l xaritasi</text>
+<path d="M800,356 L800,448" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<text x="812" y="407" text-anchor="start" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">tasdiqqa yuboriladi</text>
+<polygon points="800,450.0 990.0,520 800,590.0 610.0,520" fill="#cfcfcf" stroke="#1f2d2d" stroke-width="2"/>
+<text x="800" y="503.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Kotibiyat mudiri</text>
+<text x="800" y="526.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">(investitsiya bo'limi)</text>
+<text x="800" y="548.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">tasdiqlaydimi?</text>
+<path d="M610,520 L562,520" fill="none" stroke="#e8622c" stroke-width="2.2" stroke-dasharray="9,7" marker-end="url(#o)"/>
+<text x="586" y="507" text-anchor="middle" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">yo'q</text>
+<polygon points="315.0,520 343.0,472.0 537.0,472.0 565.0,520 537.0,568.0 343.0,568.0" fill="#fde6db" stroke="#1f2d2d" stroke-width="2"/>
+<text x="440" y="503.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Rad etiladi</text>
+<text x="440" y="526.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">sababi yoziladi va</text>
+<text x="440" y="548.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">tahrirlashga qaytariladi</text>
+<path d="M315,520 L200,520 L200,449" fill="none" stroke="#e8622c" stroke-width="2.2" stroke-dasharray="9,7" marker-end="url(#o)"/>
+<text x="190" y="500" text-anchor="end" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">qayta tahrirlab,</text>
+<text x="190" y="520" text-anchor="end" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">yana yuboradi</text>
+<text x="60" y="632" font-size="15" font-weight="700" letter-spacing="1.5" fill="#2e7d32">2-BOSQICH · AMALGA OSHIRISH VA NATIJA</text><line x1="60" y1="642" x2="1180" y2="642" stroke="#cfd8d3" stroke-width="1.5"/>
+<path d="M800,590 L800,668" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<text x="812" y="662" text-anchor="start" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">ha</text>
+<polygon points="620.0,710 648.0,670.0 952.0,670.0 980.0,710 952.0,750.0 648.0,750.0" fill="#e4e4e4" stroke="#1f2d2d" stroke-width="2"/>
+<text x="800" y="705.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Reja amalga oshiriladi</text>
+<text x="800" y="727.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">xorijiy safar</text>
+<path d="M800,750 L800,798" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<polygon points="800,800.0 980.0,870 800,940.0 620.0,870" fill="#cfcfcf" stroke="#1f2d2d" stroke-width="2"/>
+<text x="800" y="865.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Har bir reja bandi</text>
+<text x="800" y="887.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">bajarildimi?</text>
+<rect x="60" y="815" width="230" height="110" rx="10" fill="#fff7e6" stroke="#e8a23c" stroke-width="1.5"/>
+<text x="74" y="841" font-size="15" font-weight="700" fill="#1f2d2d">Misol:</text>
+<text x="74" y="862" font-size="15" font-weight="400" fill="#1f2d2d">10 ta reja bandi</text>
+<text x="74" y="883" font-size="15" font-weight="400" fill="#1f2d2d">→ 8 tasi erishildi</text>
+<text x="74" y="904" font-size="15" font-weight="400" fill="#1f2d2d">→ 2 tasi erishilmadi</text>
+<rect x="990" y="662" width="190" height="128" rx="10" fill="#e9f5ea" stroke="#2e7d32" stroke-width="1.5"/>
+<text x="1004" y="688" font-size="15" font-weight="700" fill="#1f2d2d">Qo'shimcha yutuq:</text>
+<text x="1004" y="709" font-size="15" font-weight="400" fill="#1f2d2d">rejada yo'q, lekin</text>
+<text x="1004" y="730" font-size="15" font-weight="400" fill="#1f2d2d">safarda tuzilgan</text>
+<text x="1004" y="751" font-size="15" font-weight="400" fill="#1f2d2d">shartnoma ham</text>
+<text x="1004" y="772" font-size="15" font-weight="400" fill="#1f2d2d">yutuq hisoblanadi</text>
+<path d="M620,870 L470,870 L470,983" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<text x="540" y="858" text-anchor="middle" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">ha</text>
+<path d="M980,870 L1040,870 L1040,983" fill="none" stroke="#e8622c" stroke-width="2.2" stroke-dasharray="9,7" marker-end="url(#o)"/>
+<text x="1010" y="858" text-anchor="middle" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">yo'q</text>
+<polygon points="255.0,1040 283.0,984.0 657.0,984.0 685.0,1040 657.0,1096.0 283.0,1096.0" fill="#dff0e0" stroke="#1f2d2d" stroke-width="2"/>
+<text x="470" y="1024.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Erishilgan kelishuv (YUTUQ)</text>
+<text x="470" y="1046.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">asoslari biriktiriladi: shartnoma,</text>
+<text x="470" y="1068.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">memorandum, hujjatlar · muddati</text>
+<polygon points="910.0,1040 938.0,984.0 1142.0,984.0 1170.0,1040 1142.0,1096.0 938.0,1096.0" fill="#fde6db" stroke="#1f2d2d" stroke-width="2"/>
+<text x="1040" y="1035.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Erishilmadi</text>
+<text x="1040" y="1057.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">sababi yoziladi</text>
+<path d="M470,1096 L470,1130 L640,1130 L640,1152" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<path d="M1040,1096 L1040,1130 L960,1130 L960,1152" fill="none" stroke="#e8622c" stroke-width="2.2" stroke-dasharray="9,7" marker-end="url(#o)"/>
+<ellipse cx="800" cy="1198" rx="300" ry="52" fill="#e3f6f1" stroke="#1f2d2d" stroke-width="2"/>
+<text x="800" y="1193.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">AI tahlili</text>
+<text x="800" y="1215.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">reja va natija qanchalik mos: masalan 80%</text>
+<text x="60" y="1288" font-size="15" font-weight="700" letter-spacing="1.5" fill="#2e7d32">3-BOSQICH · KELISHUV MONITORINGI</text><line x1="60" y1="1298" x2="1180" y2="1298" stroke="#cfd8d3" stroke-width="1.5"/>
+<path d="M800,1250 L800,1343" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<text x="812" y="1330" text-anchor="start" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">har bir kelishuv uchun</text>
+<polygon points="570.0,1390 598.0,1344.0 1002.0,1344.0 1030.0,1390 1002.0,1436.0 598.0,1436.0" fill="#e4e4e4" stroke="#1f2d2d" stroke-width="2"/>
+<text x="800" y="1374.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Kelishuv monitoringi</text>
+<text x="800" y="1396.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">muddat davomida bajarilayotgan</text>
+<text x="800" y="1418.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">ishlar kuzatib boriladi</text>
+<path d="M800,1436 L800,1488" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<polygon points="800,1490.0 970.0,1560 800,1630.0 630.0,1560" fill="#cfcfcf" stroke="#1f2d2d" stroke-width="2"/>
+<text x="800" y="1555.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Kelishuv</text>
+<text x="800" y="1577.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">yakunlandimi?</text>
+<path d="M970,1560 L1110,1560 L1110,1390 L1032,1390" fill="none" stroke="#e8622c" stroke-width="2.2" stroke-dasharray="9,7" marker-end="url(#o)"/>
+<text x="1118" y="1480" text-anchor="start" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">yo'q —</text>
+<text x="1118" y="1500" text-anchor="start" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">kuzatuv</text>
+<text x="1118" y="1520" text-anchor="start" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">davom etadi</text>
+<path d="M800,1630 L800,1683" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<text x="812" y="1665" text-anchor="start" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">ha</text>
+<ellipse cx="800" cy="1730" rx="240" ry="46" fill="#e3f6f1" stroke="#1f2d2d" stroke-width="2"/>
+<text x="800" y="1725.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Kelishuv yakunlandi</text>
+<text x="800" y="1747.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">yakuniy natija qayd etiladi</text>
+<rect x="60" y="1810" width="1120" height="104" rx="10" fill="#fff7e6" stroke="#e8a23c" stroke-width="1.5"/>
+<text x="74" y="1836" font-size="15" font-weight="700" fill="#1f2d2d">Muhim qoidalar:</text>
+<text x="74" y="1857" font-size="15" font-weight="400" fill="#1f2d2d">• Tizim hozircha faqat viloyat hokimligi uchun ishlaydi.</text>
+<text x="74" y="1878" font-size="15" font-weight="400" fill="#1f2d2d">• Rejani tasdiqlovchi — viloyat apparati investitsiya bo'limi kotibiyat mudiri.</text>
+<text x="74" y="1899" font-size="15" font-weight="400" fill="#1f2d2d">• Tasdiqlangan reja o'zgartirilmaydi. Rad etilgan reja yaratuvchisiga qayta tahrirlash uchun qaytariladi.</text>
+</svg>

@@ -1,0 +1,22 @@
+import { db } from "@/lib/db";
+import { badRequest, forbidden, withUser } from "@/lib/api";
+import { canReportPlan, completePlanIfDone } from "@/lib/plans";
+import { runPlanAnalysis } from "@/lib/analysis";
+import { loadPlanForUser } from "@/lib/serialize";
+
+export const maxDuration = 120;
+
+/** Closes the trip report: every roadmap item must have a result. Runs the AI comparison right away. */
+export const POST = withUser<{ id: string }>(async ({ user, params }) => {
+  const plan = await loadPlanForUser(user, params.id);
+  if (!canReportPlan(user, plan)) throw forbidden("Hisobotni yakunlay olmaysiz");
+  const pending = plan.items.filter((i) => i.result === "PENDING");
+  if (pending.length > 0) {
+    throw badRequest(`${pending.length} ta band bo'yicha natija kiritilmagan`);
+  }
+
+  await db.plan.update({ where: { id: plan.id }, data: { status: "REPORTED", reportedAt: new Date() } });
+  const analysis = await runPlanAnalysis(plan.id, user.id);
+  await completePlanIfDone(plan.id);
+  return { ok: true, score: analysis.score };
+});

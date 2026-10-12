@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  TASDIQLOVCHI
+  ORINBOSAR
+  BOSHQARMA_BOSHLIGI
+  TUMAN_HOKIMI
+  KUZATUVCHI
+}
+
+enum DepartmentType {
+  APPARAT
+  INVESTITSIYA_BOLIMI
+  BOSHQARMA
+  TUMAN_HOKIMLIGI
+  SHAHAR_HOKIMLIGI
+}
+
+enum OverrideState {
+  GRANT
+  DENY
+}
+
+enum PlanStatus {
+  DRAFT
+  PENDING
+  REJECTED
+  APPROVED
+  REPORTED
+  COMPLETED
+}
+
+enum ItemResult {
+  PENDING
+  ACHIEVED
+  NOT_ACHIEVED
+}
+
+enum ApprovalAction {
+  SUBMIT
+  APPROVE
+  REJECT
+}
+
+enum DocumentType {
+  SHARTNOMA
+  MEMORANDUM
+  BITIM
+  BOSHQA
+}
+
+enum AgreementStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model Department {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  type      DepartmentType
+  createdAt DateTime       @default(now())
+
+  users       User[]
+  plans       Plan[]
+  permissions DepartmentPermission[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  fullName     String
+  username     String    @unique
+  passwordHash String
+  role         Role
+  position     String?
+  departmentId String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  department       Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  permissions      UserPermission[]
+  plans            Plan[]            @relation("PlanCreator")
+  approvedPlans    Plan[]            @relation("PlanApprover")
+  planVersions     PlanVersion[]
+  approvals        PlanApproval[]
+  agreements       Agreement[]
+  agreementUpdates AgreementUpdate[]
+  attachments      Attachment[]
+  analyses         AiAnalysis[]
+}
+
+model RolePermission {
+  role       Role
+  permission String
+
+  @@id([role, permission])
+}
+
+model DepartmentPermission {
+  departmentId String
+  permission   String
+  state        OverrideState
+  reason       String?
+  updatedAt    DateTime      @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@id([departmentId, permission])
+}
+
+model UserPermission {
+  userId     String
+  permission String
+  state      OverrideState
+  reason     String?
+  updatedAt  DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permission])
+}
+
+model Plan {
+  id              String     @id @default(cuid())
+  title           String
+  goal            String
+  country         String
+  city            String?
+  startDate       DateTime
+  endDate         DateTime
+  status          PlanStatus @default(DRAFT)
+  version         Int        @default(0)
+  rejectionReason String?
+  creatorId       String
+  departmentId    String?
+  approvedById    String?
+  submittedAt     DateTime?
+  approvedAt      DateTime?
+  reportedAt      DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  creator    User?          @relation("PlanCreator", fields: [creatorId], references: [id])
+  approvedBy User?          @relation("PlanApprover", fields: [approvedById], references: [id])
+  department Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  items      PlanItem[]
+  versions   PlanVersion[]
+  approvals  PlanApproval[]
+  agreements Agreement[]
+  analyses   AiAnalysis[]
+
+  @@index([status])
+  @@index([creatorId])
+  @@index([departmentId])
+}
+
+model PlanItem {
+  id             String     @id @default(cuid())
+  planId         String
+  order          Int
+  title          String
+  expectedResult String
+  dueDate        DateTime?
+  result         ItemResult @default(PENDING)
+  resultNote     String?
+  failureReason  String?
+
+  plan       Plan        @relation(fields: [planId], references: [id], onDelete: Cascade)
+  agreements Agreement[]
+
+  @@index([planId])
+}
+
+model PlanVersion {
+  id          String   @id @default(cuid())
+  planId      String
+  version     Int
+  snapshot    Json
+  createdById String
+  createdAt   DateTime @default(now())
+
+  plan      Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@unique([planId, version])
+}
+
+model PlanApproval {
+  id        String         @id @default(cuid())
+  planId    String
+  version   Int
+  action    ApprovalAction
+  comment   String?
+  userId    String
+  createdAt DateTime       @default(now())
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([planId])
+}
+
+model Agreement {
+  id             String          @id @default(cuid())
+  planId         String
+  planItemId     String?
+  title          String
+  partner        String
+  partnerCountry String?
+  documentType   DocumentType    @default(SHARTNOMA)
+  documentNumber String?
+  signedDate     DateTime?
+  amount         Decimal?        @db.Decimal(18, 2)
+  currency       String?
+  deadline       DateTime
+  status         AgreementStatus @default(ACTIVE)
+  progress       Int             @default(0)
+  description    String?
+  createdById    String
+  completedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  plan        Plan              @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planItem    PlanItem?         @relation(fields: [planItemId], references: [id], onDelete: SetNull)
+  createdBy   User              @relation(fields: [createdById], references: [id])
+  attachments Attachment[]
+  updates     AgreementUpdate[]
+
+  @@index([planId])
+  @@index([status, deadline])
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  agreementId  String
+  fileName     String
+  url          String
+  size         Int
+  mimeType     String
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  agreement  Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  uploadedBy User      @relation(fields: [uploadedById], references: [id])
+}
+
+model AgreementUpdate {
+  id          String   @id @default(cuid())
+  agreementId String
+  note        String
+  progress    Int
+  createdById String
+  createdAt   DateTime @default(now())
+
+  agreement Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  createdBy User      @relation(fields: [createdById], references: [id])
+
+  @@index([agreementId])
+}
+
+model AiAnalysis {
+  id          String   @id @default(cuid())
+  planId      String
+  score       Int
+  summary     String
+  details     Json
+  model       String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  plan      Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@index([planId])
+}

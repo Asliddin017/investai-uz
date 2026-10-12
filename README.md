@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InvestAI.uz — investitsiya safarlari monitoringi
 
-## Getting Started
+Viloyat hokimligi uchun xorijiy investitsiya safarlarini rejadan kelishuv yakunigacha kuzatib boradigan tizim.
 
-First, run the development server:
+## Jarayon
+
+1. **Reja tuziladi** — viloyat apparati o'rinbosarlari, boshqarma boshliqlari, tuman/shahar hokimlari kiritadi: nomi, maqsadi, muddati, yo'l xaritasi (bandlar).
+2. **Tasdiqlanadi** — viloyat apparati investitsiya bo'limi kotibiyat mudiri tasdiqlaydi yoki sababini yozib rad etadi. Rad etilgan reja muallifga tahrirlash uchun qaytadi. Har yuborilgan variant tarixda o'zgarmas saqlanadi (v1 — dastlabki). Tasdiqlangan reja o'zgartirilmaydi.
+3. **Safar natijalari** — har bir band: erishildi / erishilmadi (sababi bilan). Erishilgan kelishuvlar (shartnoma, memorandum, bitim) amalga oshish muddati va asos hujjatlari bilan biriktiriladi. Rejada yo'q kelishuv — qo'shimcha yutuq.
+4. **AI tahlil** — hisobot yakunlanganda Claude reja bilan natija mosligini foizda baholaydi (`ANTHROPIC_API_KEY` bo'lmasa oddiy hisob-kitob ishlaydi).
+5. **Kelishuv monitoringi** — muddat davomida bajarilgan ishlar yozib boriladi; barcha kelishuvlar yopilganda reja yakunlanadi.
+
+Diagramma: [`docs/diagrams/umumiy.png`](docs/diagrams/umumiy.png).
+
+## Ruxsatlar
+
+`/admin/permissions` — uch daraja: **rol** → **tashkilot** → **foydalanuvchi** (eng aniq daraja ustun). Ruxsatlar katalogi: `src/lib/permissions.ts`.
+
+| Rol | Asosiy huquqlar |
+| --- | --- |
+| Super Admin | hammasi |
+| Kotibiyat mudiri (tasdiqlovchi) | barcha rejalarni ko'rish, tasdiqlash/rad etish, kelishuvni yakunlash |
+| O'rinbosar, boshqarma boshlig'i, tuman/shahar hokimi | reja tuzish, natija va kelishuv kiritish, o'z tashkiloti rejalarini ko'rish |
+| Kuzatuvchi | barcha rejalarni faqat ko'rish |
+
+## Texnologiyalar
+
+Next.js 15 (App Router, API routes) · TypeScript · Tailwind CSS 4 · Prisma + PostgreSQL · TanStack Query · Claude API (`@anthropic-ai/sdk`) · Vercel Blob (yopiq fayllar).
+
+## Lokal ishga tushirish
 
 ```bash
+docker run -d --name investai-postgres -e POSTGRES_USER=investai -e POSTGRES_PASSWORD=investai \
+  -e POSTGRES_DB=investai -p 5434:5432 postgres:17-alpine
+cp .env.example .env          # AUTH_SECRET ni 32+ belgili tasodifiy qatorga almashtiring
+npm install
+npx prisma migrate deploy
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Demo loginlar (parol `Demo12345!`, `SEED_PASSWORD` bilan o'zgartiriladi): `admin`, `kotibiyat`, `orinbosar`, `boshqarma`, `tuman`, `kuzatuvchi`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Muhit o'zgaruvchilari
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| O'zgaruvchi | Vazifasi |
+| --- | --- |
+| `DATABASE_URL`, `DIRECT_URL` | PostgreSQL ulanishi (pooled va to'g'ridan-to'g'ri) |
+| `AUTH_SECRET` | sessiya imzosi, kamida 32 belgi |
+| `ANTHROPIC_API_KEY` | AI moslik tahlili (ixtiyoriy) |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob — hujjatlar saqlanadi (Vercel'da majburiy, lokalda `uploads/`) |
+| `SEED_PASSWORD`, `SEED_DEMO` | seed paroli; `SEED_DEMO=0` — demo rejalarsiz |
 
-## Learn More
+## Tekshiruvlar
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm test                                         # unit testlar
+npm run typecheck && npm run lint
+BASE_URL=http://localhost:3000 node scripts/smoke.mjs   # butun jarayon bo'yicha e2e
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`vercel-build` skripti migratsiyalarni qo'llaydi va seed'ni ishga tushiradi (seed takroriy ishga tushirilsa ma'lumotni buzmaydi). Postgres (Neon) va Blob store loyihaga ulanishi kerak.

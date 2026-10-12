@@ -1,0 +1,154 @@
+// End-to-end smoke test of the whole plan → approval → report → agreement → monitoring flow.
+// Usage: BASE_URL=http://localhost:3100 node scripts/smoke.mjs   (needs a seeded database)
+
+const BASE = process.env.BASE_URL ?? "http://localhost:3100";
+const PASSWORD = process.env.SEED_PASSWORD ?? "Demo12345!";
+
+let failures = 0;
+function check(name, cond, extra = "") {
+  console.log(`${cond ? "✔" : "✘"} ${name}${extra ? ` — ${extra}` : ""}`);
+  if (!cond) failures++;
+}
+
+async function login(username) {
+  const res = await fetch(`${BASE}/api/v1/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password: PASSWORD }),
+  });
+  if (!res.ok) throw new Error(`login ${username}: ${res.status}`);
+  const cookie = res.headers.get("set-cookie").split(";")[0];
+  return async (path, { method = "GET", json, body } = {}) => {
+    const r = await fetch(`${BASE}/api/v1${path}`, {
+      method,
+      headers: { cookie, ...(json ? { "Content-Type": "application/json" } : {}) },
+      body: json ? JSON.stringify(json) : body,
+    });
+    const type = r.headers.get("content-type") ?? "";
+    return { status: r.status, data: type.includes("json") ? await r.json() : await r.text() };
+  };
+}
+
+const author = await login("boshqarma");
+const approver = await login("kotibiyat");
+const tuman = await login("tuman");
+const admin = await login("admin");
+
+// 1. Draft + submit
+const planBody = {
+  title: "Smoke: Germaniyaga safar",
+  goal: "Mashinasozlik bo'yicha investitsiya kelishuvlari tuzish",
+  country: "Germaniya",
+  city: "Myunxen",
+  startDate: "2026-11-01",
+  endDate: "2026-11-05",
+  items: [
+    { title: "Avtokomponent zavodi", expectedResult: "30 mln EUR shartnoma" },
+    { title: "Texnopark", expectedResult: "Memorandum" },
+  ],
+};
+let r = await author("/plans", { method: "POST", json: planBody });
+check("muallif reja yaratadi", r.status === 200, r.status);
+const planId = r.data.id;
+r = await author(`/plans/${planId}/submit`, { method: "POST" });
+check("tasdiqqa yuboradi", r.status === 200);
+
+// 2. Author cannot approve own plan; another org cannot see it
+r = await author(`/plans/${planId}/approve`, { method: "POST", json: {} });
+check("muallif o'z rejasini tasdiqlay olmaydi", r.status === 403, r.status);
+r = await tuman(`/plans/${planId}`);
+check("boshqa tashkilot rejani ko'rmaydi", r.status === 403, r.status);
+
+// 3. Reject → returned for editing
+r = await approver(`/plans/${planId}/reject`, { method: "POST", json: { comment: "Summalarni aniqlashtiring" } });
+check("kotibiyat mudiri rad etadi", r.status === 200);
+r = await author(`/plans/${planId}`);
+check("holat REJECTED, sabab saqlangan", r.data.status === "REJECTED" && r.data.rejectionReason === "Summalarni aniqlashtiring");
+check("rad etilgan reja tahrirlanadi", r.data.can.edit === true);
+
+// 4. Edit and resubmit → version 2, version 1 kept
+r = await author(`/plans/${planId}`, {
+  method: "PUT",
+  json: { ...planBody, items: [...planBody.items, { title: "O'quv markazi", expectedResult: "Bitim" }] },
+});
+check("tahrirlash", r.status === 200, JSON.stringify(r.data));
+await author(`/plans/${planId}/submit`, { method: "POST" });
+r = await author(`/plans/${planId}`);
+check("2-variant yaratildi", r.data.version === 2 && r.data.versions.length === 2);
+check("dastlabki variant o'zgarmagan", r.data.versions[0].snapshot.items.length === 2 && r.data.versions[1].snapshot.items.length === 3);
+
+// 5. Approve → frozen
+r = await approver(`/plans/${planId}/approve`, { method: "POST", json: {} });
+check("tasdiqlaydi", r.status === 200);
+r = await author(`/plans/${planId}`, { method: "PUT", json: planBody });
+check("tasdiqlangan reja o'zgarmaydi", r.status === 403, r.status);
+
+// 6. Results
+r = await author(`/plans/${planId}`);
+const [i1, i2, i3] = r.data.items;
+r = await author(`/plans/${planId}/report`, { method: "POST" });
+check("natijasiz hisobot yakunlanmaydi", r.status === 400, r.data.error);
+r = await author(`/plans/${planId}/items/${i2.id}/result`, { method: "PUT", json: { result: "NOT_ACHIEVED" } });
+check("erishilmagan band sababsiz qabul qilinmaydi", r.status === 400);
+await author(`/plans/${planId}/items/${i1.id}/result`, { method: "PUT", json: { result: "ACHIEVED", resultNote: "32 mln EUR" } });
+await author(`/plans/${planId}/items/${i2.id}/result`, { method: "PUT", json: { result: "NOT_ACHIEVED", failureReason: "Hamkor muddatni surdi" } });
+await author(`/plans/${planId}/items/${i3.id}/result`, { method: "PUT", json: { result: "ACHIEVED" } });
+
+// 7. Agreement + documents + monitoring
+r = await author(`/plans/${planId}/agreements`, {
+  method: "POST",
+  json: { planItemId: i1.id, title: "Avtokomponent zavodi shartnomasi", partner: "Bavaria Parts GmbH", documentType: "SHARTNOMA", amount: "32000000", currency: "EUR", deadline: "2027-02-01" },
+});
+check("kelishuv qo'shiladi", r.status === 200, JSON.stringify(r.data));
+const agreementId = r.data.id;
+const form = new FormData();
+form.append("files", new Blob(["%PDF-1.4 smoke"], { type: "application/pdf" }), "shartnoma.pdf");
+r = await author(`/agreements/${agreementId}/attachments`, { method: "POST", body: form });
+check("asos hujjat biriktiriladi", r.status === 200, JSON.stringify(r.data));
+r = await author(`/agreements/${agreementId}`);
+const attachmentId = r.data.attachments[0]?.id;
+check("hujjat ro'yxatda, ichki URL ochilmaydi", !!attachmentId && r.data.attachments[0].url === undefined);
+r = await author(`/attachments/${attachmentId}`);
+check("hujjat yuklab olinadi", r.status === 200 && String(r.data).startsWith("%PDF"));
+r = await tuman(`/attachments/${attachmentId}`);
+check("boshqa tashkilot hujjatni ololmaydi", r.status === 403, r.status);
+r = await author(`/agreements/${agreementId}/updates`, { method: "POST", json: { note: "Yer ajratildi", progress: 30 } });
+check("monitoring yozuvi", r.status === 200);
+
+// 8. Report → AI analysis
+r = await author(`/plans/${planId}/report`, { method: "POST" });
+check("hisobot yakunlandi + AI tahlil", r.status === 200 && typeof r.data.score === "number", `score=${r.data.score}`);
+r = await author(`/plans/${planId}`);
+check("holat REPORTED, tahlil saqlangan", r.data.status === "REPORTED" && r.data.analyses.length === 1);
+
+// 9. Close agreement → plan completed
+r = await approver(`/agreements/${agreementId}/status`, { method: "POST", json: { status: "COMPLETED" } });
+check("kotibiyat kelishuvni yakunlaydi", r.status === 200, JSON.stringify(r.data));
+r = await author(`/plans/${planId}`);
+check("barcha kelishuvlar yopilgach reja yakunlanadi", r.data.status === "COMPLETED", r.data.status);
+
+// 10. Permission overrides take effect immediately
+const users = (await admin("/admin/users")).data;
+const tumanUser = users.find((u) => u.username === "tuman");
+r = await admin(`/admin/permissions/users/${tumanUser.id}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "plan:create", state: "DENY", reason: "smoke test" }] },
+});
+check("admin shaxsiy inkor qo'yadi", r.status === 200);
+r = await tuman("/plans", { method: "POST", json: planBody });
+check("inkor qilingan foydalanuvchi reja yarata olmaydi", r.status === 403, r.status);
+await admin(`/admin/permissions/users/${tumanUser.id}`, { method: "PUT", json: { overrides: [] } });
+r = await tuman("/admin/permissions/roles");
+check("oddiy foydalanuvchi ruxsatlar API'siga kira olmaydi", r.status === 403);
+r = await admin("/admin/permissions/roles", { method: "PUT", json: { roles: { SUPER_ADMIN: [] } } });
+r = await admin("/admin/permissions/roles");
+check("Super Admin'dan qulflangan ruxsatlar olinmaydi", r.data.roles.SUPER_ADMIN.includes("admin:permissions"));
+// restore the full Super Admin row
+const catalog = (await admin("/admin/permissions/catalog")).data;
+await admin("/admin/permissions/roles", { method: "PUT", json: { roles: { SUPER_ADMIN: catalog.permissions.map((p) => p.key) } } });
+
+r = await approver("/dashboard");
+check("dashboard ishlaydi", r.status === 200 && typeof r.data.plansByStatus === "object");
+
+console.log(failures === 0 ? "\nHAMMASI O'TDI" : `\n${failures} ta tekshiruv O'TMADI`);
+process.exit(failures === 0 ? 0 : 1);

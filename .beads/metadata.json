@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "investitsiya",
+  "project_id": "2d92c4c1-37a0-4a26-a36a-79b1d6530157"
+}

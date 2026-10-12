@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" font-family="'Source Sans 3','Segoe UI',Arial,sans-serif">
+<defs>
+<marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/></marker>
+<marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#e8622c"/></marker>
+</defs>
+<rect width="960" height="720" fill="#ffffff"/>
+<text x="480.0" y="44" text-anchor="middle" font-size="26" font-weight="700" fill="#1f2d2d">Kim reja tuzadi, kim tasdiqlaydi?</text>
+<text x="480.0" y="72" text-anchor="middle" font-size="16" fill="#666">Viloyat va tuman/shahar hokimiyatlarida bir xil tuzilma</text>
+<rect x="80" y="100" width="340" height="36" rx="18" fill="#1f2d2d"/><text x="250" y="124" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">VILOYAT HOKIMIYATI</text>
+<rect x="540" y="100" width="340" height="36" rx="18" fill="#1f2d2d"/><text x="710" y="124" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">TUMAN / SHAHAR HOKIMIYATI</text>
+<ellipse cx="250" cy="215" rx="150" ry="48" fill="#e3f6f1" stroke="#1f2d2d" stroke-width="2"/>
+<text x="250" y="209.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Hokim</text>
+<text x="250" y="231.9" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">rejani tasdiqlaydi</text>
+<polygon points="250,320.0 400.0,385 250,450.0 100.0,385" fill="#cfcfcf" stroke="#1f2d2d" stroke-width="2"/>
+<text x="250" y="368.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Hokim o'rinbosari</text>
+<text x="250" y="390.9" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">(investitsiya bo'limi</text>
+<text x="250" y="412.9" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">boshlig'i) — reja tuzadi</text>
+<polygon points="110.0,555 138.0,517.0 362.0,517.0 390.0,555 362.0,593.0 138.0,593.0" fill="#e4e4e4" stroke="#1f2d2d" stroke-width="2"/>
+<text x="250" y="550.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Bo'lim boshlig'i yordamchisi</text>
+<text x="250" y="572.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">reja tuzadi</text>
+<path d="M250,517 L250,453" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<text x="240" y="490" text-anchor="end" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">reja tayyorlaydi</text>
+<path d="M250,320 L250,266" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<text x="240" y="298" text-anchor="end" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">tasdiqlashga yuboradi</text>
+<ellipse cx="710" cy="215" rx="150" ry="48" fill="#e3f6f1" stroke="#1f2d2d" stroke-width="2"/>
+<text x="710" y="209.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Hokim</text>
+<text x="710" y="231.9" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">rejani tasdiqlaydi</text>
+<polygon points="710,320.0 860.0,385 710,450.0 560.0,385" fill="#cfcfcf" stroke="#1f2d2d" stroke-width="2"/>
+<text x="710" y="368.9" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Hokim o'rinbosari</text>
+<text x="710" y="390.9" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">(investitsiya bo'limi</text>
+<text x="710" y="412.9" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">boshlig'i) — reja tuzadi</text>
+<polygon points="570.0,555 598.0,517.0 822.0,517.0 850.0,555 822.0,593.0 598.0,593.0" fill="#e4e4e4" stroke="#1f2d2d" stroke-width="2"/>
+<text x="710" y="550.0" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d2d">Bo'lim boshlig'i yordamchisi</text>
+<text x="710" y="572.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1f2d2d">reja tuzadi</text>
+<path d="M710,517 L710,453" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<text x="720" y="490" text-anchor="start" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">reja tayyorlaydi</text>
+<path d="M710,320 L710,266" fill="none" stroke="#2e7d32" stroke-width="2.2" marker-end="url(#g)"/>
+<text x="720" y="298" text-anchor="start" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">tasdiqlashga yuboradi</text>
+<path d="M560,385 L480,385 L480,215 L402,215" fill="none" stroke="#e8622c" stroke-width="2.2" stroke-dasharray="9,7" marker-end="url(#o)"/>
+<rect x="388" y="282" width="184" height="50" rx="6" fill="#fff" stroke="#e8622c" stroke-width="1.2"/><text x="480" y="302" text-anchor="middle" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">tuman rejasini viloyat</text>
+<text x="480" y="322" text-anchor="middle" font-size="15" font-style="italic" fill="#555" paint-order="stroke" stroke="#fff" stroke-width="6">hokimi ham tasdiqlaydi</text>
+<rect x="60" y="628" width="840" height="82" rx="10" fill="#fff7e6" stroke="#e8a23c" stroke-width="1.5"/>
+<text x="74" y="654" font-size="15" font-weight="700" fill="#1f2d2d">Ko'rish huquqi:</text>
+<text x="74" y="675" font-size="15" font-weight="400" fill="#1f2d2d">• Viloyat hokimi — viloyat rejalari + barcha tuman/shahar rejalarini ko'radi va tasdiqlaydi.</text>
+<text x="74" y="696" font-size="15" font-weight="400" fill="#1f2d2d">• Tuman/shahar hokimi — faqat o'z hokimiyati rejalarini ko'radi. Viloyat rejasi unga ko'rinmaydi.</text>
+</svg>
