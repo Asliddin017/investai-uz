@@ -80,7 +80,7 @@ export const GET = withUser(async ({ user }) => {
               id: `results-${plan.id}`,
               kind: "results",
               title: plan.title,
-              hint: `${left} ta band natijasini kiriting${asked ? " · kotibiyat so'radi" : ""}`,
+              hint: `${left} ta reja natijasini kiriting${asked ? " · kotibiyat so'radi" : ""}`,
               href: `/plans/${plan.id}`,
               urgent: asked,
             }

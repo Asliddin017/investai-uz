@@ -7,9 +7,9 @@ import { audit } from "@/lib/audit";
 
 export const PUT = withUser<{ id: string; itemId: string }>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
-  if (!canReportPlan(user, plan)) throw forbidden("Natijani faqat tasdiqlangan rejaga kiritish mumkin");
+  if (!canReportPlan(user, plan)) throw forbidden("Natijani faqat tasdiqlangan safarga kiritish mumkin");
   const item = plan.items.find((i) => i.id === params.itemId);
-  if (!item) throw notFound("Reja bandi topilmadi");
+  if (!item) throw notFound("Reja topilmadi");
 
   const data = itemResultInput.parse(await req.json());
   await db.planItem.update({
@@ -20,6 +20,6 @@ export const PUT = withUser<{ id: string; itemId: string }>(async ({ req, user, 
       failureReason: data.result === "NOT_ACHIEVED" ? data.failureReason : null,
     },
   });
-  await audit(user, { action: "plan.item_result", entityType: "plan", entityId: plan.id, summary: `«${plan.title}», ${item.order}-band: ${data.result === "ACHIEVED" ? "erishildi" : data.result === "NOT_ACHIEVED" ? "erishilmadi" : "natija olib tashlandi"}` }, req);
+  await audit(user, { action: "plan.item_result", entityType: "plan", entityId: plan.id, summary: `«${plan.title}», ${item.order}-reja: ${data.result === "ACHIEVED" ? "erishildi" : data.result === "NOT_ACHIEVED" ? "erishilmadi" : "natija olib tashlandi"}` }, req);
   return { ok: true };
 });

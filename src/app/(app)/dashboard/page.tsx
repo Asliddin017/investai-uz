@@ -123,7 +123,7 @@ export default function DashboardPage() {
       <MyTasks />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatTile label="Jami rejalar" value={plansTotal} icon="flight_takeoff" href="/plans" />
+        <StatTile label="Jami safarlar" value={plansTotal} icon="flight_takeoff" href="/plans" />
         <StatTile
           label="Tasdiqlashda"
           value={data.plansByStatus.PENDING ?? 0}
@@ -150,7 +150,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Rejalar holati bo'yicha" icon="stacked_bar_chart" />
+          <CardHeader title="Safarlar holati bo'yicha" icon="stacked_bar_chart" />
           <div className="space-y-2.5 p-5">
             {PLAN_STATUS_OPTIONS.map((s) => {
               const v = data.plansByStatus[s.value] ?? 0;
@@ -170,7 +170,7 @@ export default function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader title="Reja bandlari natijasi" icon="rule" description="Tasdiqlangan rejalarning barcha bandlari" />
+          <CardHeader title="Rejalar natijasi" icon="rule" description="Tasdiqlangan safarlarning barcha rejalari" />
           <div className="p-5">
             <ResultsBar
               achieved={data.itemsByResult.ACHIEVED ?? 0}
@@ -183,10 +183,10 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Card>
-          <CardHeader title="Tashkilotlar kesimida" icon="apartment" description="Hisoboti kiritilgan rejalar" />
+          <CardHeader title="Tashkilotlar kesimida" icon="apartment" description="Hisoboti kiritilgan safarlar" />
           {data.departments.length === 0 ? (
             <div className="p-5">
-              <EmptyState icon="apartment" title="Hali hisobot kiritilgan reja yo'q" />
+              <EmptyState icon="apartment" title="Hali hisobot kiritilgan safar yo'q" />
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -194,7 +194,7 @@ export default function DashboardPage() {
                 <thead className="border-b bg-muted/40 text-left text-muted-foreground">
                   <tr>
                     <th className="px-5 py-2 font-medium">Tashkilot</th>
-                    <th className="px-3 py-2 text-center font-medium">Rejalar</th>
+                    <th className="px-3 py-2 text-center font-medium">Safarlar</th>
                     <th className="px-3 py-2 text-center font-medium">Erishildi</th>
                     <th className="px-3 py-2 text-center font-medium">Kelishuv</th>
                     <th className="w-40 px-5 py-2 font-medium">AI moslik</th>

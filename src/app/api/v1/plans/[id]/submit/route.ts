@@ -8,8 +8,8 @@ import { audit } from "@/lib/audit";
 /** Sends a draft (or a corrected rejected plan) for approval and freezes this version in history. */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
-  if (!canEditPlan(user, plan)) throw forbidden("Bu rejani tasdiqqa yuborib bo'lmaydi");
-  if (plan.items.length === 0) throw badRequest("Yo'l xaritasida kamida bitta band bo'lsin");
+  if (!canEditPlan(user, plan)) throw forbidden("Bu safarni tasdiqqa yuborib bo'lmaydi");
+  if (plan.items.length === 0) throw badRequest("Safarda kamida bitta reja bo'lsin");
 
   const version = plan.version + 1;
   await db.$transaction([

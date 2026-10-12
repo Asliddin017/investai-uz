@@ -10,7 +10,7 @@ export type PermissionCategory = "nav" | "plan" | "agreement" | "ai" | "admin";
 
 export const CATEGORY_LABELS: Record<PermissionCategory, string> = {
   nav: "Menyu",
-  plan: "Rejalar",
+  plan: "Safarlar",
   agreement: "Kelishuvlar",
   ai: "AI tahlil",
   admin: "Boshqaruv",
@@ -20,14 +20,14 @@ export const CATEGORY_ORDER: PermissionCategory[] = ["nav", "plan", "agreement",
 
 export const PERMISSIONS: PermissionDef[] = [
   { key: "nav:dashboard", label_uz: "Dashboard sahifasini ko'rish", category: "nav" },
-  { key: "nav:plans", label_uz: "Rejalar bo'limini ko'rish", category: "nav" },
+  { key: "nav:plans", label_uz: "Safarlar bo'limini ko'rish", category: "nav" },
   { key: "nav:agreements", label_uz: "Kelishuvlar bo'limini ko'rish", category: "nav" },
 
-  { key: "plan:create", label_uz: "Reja yaratish va tahrirlash", category: "plan" },
-  { key: "plan:view_own", label_uz: "O'z rejalarini ko'rish", category: "plan" },
-  { key: "plan:view_department", label_uz: "O'z tashkiloti rejalarini ko'rish", category: "plan" },
-  { key: "plan:view_all", label_uz: "Barcha rejalarni ko'rish", category: "plan" },
-  { key: "plan:approve", label_uz: "Rejani tasdiqlash yoki rad etish", category: "plan" },
+  { key: "plan:create", label_uz: "Safar yaratish va tahrirlash", category: "plan" },
+  { key: "plan:view_own", label_uz: "O'z safarlarini ko'rish", category: "plan" },
+  { key: "plan:view_department", label_uz: "O'z tashkiloti safarlarini ko'rish", category: "plan" },
+  { key: "plan:view_all", label_uz: "Barcha safarlarni ko'rish", category: "plan" },
+  { key: "plan:approve", label_uz: "Safarni tasdiqlash yoki rad etish", category: "plan" },
   { key: "plan:report", label_uz: "Safar natijalarini kiritish", category: "plan" },
   { key: "plan:remind_report", label_uz: "Hisobotni yakunlashni so'rash", category: "plan" },
 

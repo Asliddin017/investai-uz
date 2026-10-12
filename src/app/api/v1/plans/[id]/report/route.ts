@@ -13,7 +13,7 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   if (!canReportPlan(user, plan)) throw forbidden("Hisobotni yakunlay olmaysiz");
   const pending = plan.items.filter((i) => i.result === "PENDING");
   if (pending.length > 0) {
-    throw badRequest(`${pending.length} ta band bo'yicha natija kiritilmagan`);
+    throw badRequest(`${pending.length} ta reja bo'yicha natija kiritilmagan`);
   }
 
   await db.$transaction([

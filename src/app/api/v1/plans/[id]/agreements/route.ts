@@ -11,7 +11,7 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   if (!canManageAgreements(user, plan)) throw forbidden("Kelishuv qo'shishga ruxsat yo'q");
   const data = agreementInput.parse(await req.json());
   if (data.planItemId && !plan.items.some((i) => i.id === data.planItemId)) {
-    throw badRequest("Tanlangan reja bandi bu rejaga tegishli emas");
+    throw badRequest("Tanlangan reja bu safarga tegishli emas");
   }
 
   const agreement = await db.agreement.create({

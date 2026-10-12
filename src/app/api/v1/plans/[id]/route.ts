@@ -17,7 +17,7 @@ export const GET = withUser<Params>(async ({ user, params }) => {
 export const PUT = withUser<Params>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
   if (!canEditPlan(user, plan)) {
-    throw forbidden("Tasdiqlangan yoki tasdiqlashdagi rejani o'zgartirib bo'lmaydi");
+    throw forbidden("Tasdiqlangan yoki tasdiqlashdagi safarni o'zgartirib bo'lmaydi");
   }
   const data = planInput.parse(await req.json());
   await db.$transaction([
@@ -42,7 +42,7 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
       },
     }),
   ]);
-  await audit(user, { action: "plan.update", entityType: "plan", entityId: plan.id, summary: `Reja tahrirlandi: «${data.title}»` }, req);
+  await audit(user, { action: "plan.update", entityType: "plan", entityId: plan.id, summary: `Safar tahrirlandi: «${data.title}»` }, req);
   return { id: plan.id };
 });
 

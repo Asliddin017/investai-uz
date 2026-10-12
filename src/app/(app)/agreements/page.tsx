@@ -94,7 +94,7 @@ export default function AgreementsPage() {
                         {a.plan.title}
                       </Link>
                       <div className="text-xs text-muted-foreground">
-                        {a.planItem ? `${a.planItem.order}-band` : "Rejadan tashqari"}
+                        {a.planItem ? `${a.planItem.order}-reja` : "Rejadan tashqari"}
                         {a.plan.department ? ` · ${a.plan.department.name}` : ""}
                       </div>
                     </td>

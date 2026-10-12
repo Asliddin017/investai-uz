@@ -14,15 +14,15 @@ export function nextStepFor(plan: PlanDetail): Step {
   switch (plan.status) {
     case "DRAFT":
       return c.submit
-        ? { tone: "action", icon: "send", title: "Reja tayyor bo'lsa — «Tasdiqqa yuborish»ni bosing", text: "Yuborilgandan keyin rejani o'zgartirib bo'lmaydi." }
-        : { tone: "wait", icon: "edit_note", title: "Muallif rejani hali tasdiqqa yubormagan" };
+        ? { tone: "action", icon: "send", title: "Safar tayyor bo'lsa — «Tasdiqqa yuborish»ni bosing", text: "Yuborilgandan keyin safarni o'zgartirib bo'lmaydi." }
+        : { tone: "wait", icon: "edit_note", title: "Muallif safarni hali tasdiqqa yubormagan" };
     case "REJECTED":
       return c.edit
-        ? { tone: "warn", icon: "undo", title: "Reja qaytarildi — «Tahrirlash»ni bosib tuzating va qayta yuboring", text: plan.rejectionReason }
-        : { tone: "wait", icon: "undo", title: "Reja muallifga tuzatish uchun qaytarilgan", text: plan.rejectionReason };
+        ? { tone: "warn", icon: "undo", title: "Safar qaytarildi — «Tahrirlash»ni bosib tuzating va qayta yuboring", text: plan.rejectionReason }
+        : { tone: "wait", icon: "undo", title: "Safar muallifga tuzatish uchun qaytarilgan", text: plan.rejectionReason };
     case "PENDING":
       return c.approve
-        ? { tone: "action", icon: "verified", title: "Rejani ko'rib chiqing: «Tasdiqlash» yoki «Rad etish»" }
+        ? { tone: "action", icon: "verified", title: "Safarni ko'rib chiqing: «Tasdiqlash» yoki «Rad etish»" }
         : { tone: "wait", icon: "hourglass_top", title: "Kotibiyat mudiri ko'rib chiqmoqda", text: "Sizdan hozir hech narsa talab qilinmaydi." };
     case "APPROVED":
       if (c.report) {
@@ -30,14 +30,14 @@ export function nextStepFor(plan: PlanDetail): Step {
           ? {
               tone: "action",
               icon: "rule",
-              title: `Safardan keyin: har bir band yonidagi «Natija» tugmasini bosing (${pending} ta qoldi)`,
-              text: "Shartnoma imzolangan bo'lsa, o'sha band yonidagi «Kelishuv» orqali uni muddati bilan qo'shing.",
+              title: `Safardan keyin: har bir reja yonidagi «Natija» tugmasini bosing (${pending} ta qoldi)`,
+              text: "Shartnoma imzolangan bo'lsa, o'sha reja yonidagi «Kelishuv» orqali uni muddati bilan qo'shing.",
             }
           : { tone: "action", icon: "fact_check", title: "Natijalar to'liq — «Hisobotni yakunlash»ni bosing", text: "Shundan so'ng AI xulosa avtomatik tayyor bo'ladi." };
       }
       return c.remind
         ? { tone: "wait", icon: "flight", title: "Xodim safar natijalarini kiritmoqda", text: "Kechiksa — «Hisobotni so'rash» tugmasi bilan eslating." }
-        : { tone: "wait", icon: "flight", title: "Reja tasdiqlangan, safar natijalari kutilmoqda" };
+        : { tone: "wait", icon: "flight", title: "Safar tasdiqlangan, natijalar kutilmoqda" };
     case "REPORTED":
       return {
         tone: "done",
@@ -48,7 +48,7 @@ export function nextStepFor(plan: PlanDetail): Step {
           : "Kelishuvlar yakunlanguncha kuzatiladi.",
       };
     case "COMPLETED":
-      return { tone: "done", icon: "task_alt", title: "Reja to'liq yakunlangan", text: "Barcha kelishuvlar yopilgan." };
+      return { tone: "done", icon: "task_alt", title: "Safar to'liq yakunlangan", text: "Barcha kelishuvlar yopilgan." };
   }
 }
 

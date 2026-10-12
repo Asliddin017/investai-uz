@@ -35,8 +35,8 @@ export type PlanWithDetail = Prisma.PlanGetPayload<{ include: typeof planDetailI
 
 export async function loadPlanForUser(user: CurrentUser, id: string) {
   const plan = await db.plan.findUnique({ where: { id }, include: planDetailInclude });
-  if (!plan) throw notFound("Reja topilmadi");
-  if (!canViewPlan(user, plan)) throw forbidden("Bu rejani ko'rishga ruxsat yo'q");
+  if (!plan) throw notFound("Safar topilmadi");
+  if (!canViewPlan(user, plan)) throw forbidden("Bu safarni ko'rishga ruxsat yo'q");
   return plan;
 }
 

@@ -49,7 +49,7 @@ export function PlanForm({ plan }: { plan?: PlanDetail }) {
     onSuccess: async ({ id, submit }) => {
       await qc.invalidateQueries({ queryKey: ["plans"] });
       await qc.invalidateQueries({ queryKey: ["plan", id] });
-      toast(submit ? "Reja tasdiqlashga yuborildi" : "Reja saqlandi");
+      toast(submit ? "Safar tasdiqlashga yuborildi" : "Safar saqlandi");
       router.push(`/plans/${id}`);
     },
     onError: (e) => setError(e.message),
@@ -80,7 +80,7 @@ export function PlanForm({ plan }: { plan?: PlanDetail }) {
         <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
           <MSIcon name="undo" className="text-destructive" />
           <div>
-            <div className="font-medium text-destructive">Reja rad etilgan — tuzatib qayta yuboring</div>
+            <div className="font-medium text-destructive">Safar rad etilgan — tuzatib qayta yuboring</div>
             <div className="mt-0.5">{plan.rejectionReason}</div>
           </div>
         </div>
@@ -89,7 +89,7 @@ export function PlanForm({ plan }: { plan?: PlanDetail }) {
       <Card>
         <CardHeader title="Asosiy ma'lumotlar" icon="description" />
         <div className="grid gap-4 p-5 sm:grid-cols-2">
-          <Field label="Reja nomi" required className="sm:col-span-2">
+          <Field label="Safar nomi" required className="sm:col-span-2">
             <Input value={form.title} onChange={set("title")} placeholder="Masalan: Koreya Respublikasiga investitsiya safari" />
           </Field>
           <Field label="Maqsadi" required className="sm:col-span-2">
@@ -112,12 +112,12 @@ export function PlanForm({ plan }: { plan?: PlanDetail }) {
 
       <Card>
         <CardHeader
-          title="Yo'l xaritasi"
-          description="Safarda erishilishi kerak bo'lgan har bir natija alohida band sifatida"
+          title="Rejalar"
+          description="Safarda amalga oshiriladigan har bir reja va undan kutilgan natija"
           icon="route"
           actions={
             <Button type="button" variant="outline" size="sm" icon="add" onClick={() => setItems((l) => [...l, blankItem()])}>
-              Band qo&apos;shish
+              Reja qo&apos;shish
             </Button>
           }
         />
@@ -128,8 +128,12 @@ export function PlanForm({ plan }: { plan?: PlanDetail }) {
                 {index + 1}
               </div>
               <div className="grid flex-1 gap-3 sm:grid-cols-[1fr_1fr_160px]">
-                <Field label="Band nomi">
-                  <Input value={item.title} onChange={(e) => setItem(item.key, { title: e.target.value })} />
+                <Field label="Reja nomi">
+                  <Input
+                    value={item.title}
+                    onChange={(e) => setItem(item.key, { title: e.target.value })}
+                    placeholder="Masalan: Robototexnikani O'zbekistonga olib kelish"
+                  />
                 </Field>
                 <Field label="Kutilgan natija">
                   <Input
@@ -199,7 +203,7 @@ export function PlanForm({ plan }: { plan?: PlanDetail }) {
         </Button>
       </div>
       <p className="text-right text-xs text-muted-foreground">
-        Tasdiqlangan rejani o&apos;zgartirib bo&apos;lmaydi. Har bir yuborilgan variant tarixda saqlanadi.
+        Tasdiqlangan safarni o&apos;zgartirib bo&apos;lmaydi. Har bir yuborilgan variant tarixda saqlanadi.
       </p>
     </form>
   );

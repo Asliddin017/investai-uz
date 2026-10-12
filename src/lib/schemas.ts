@@ -32,20 +32,20 @@ const personName = z
   );
 
 export const planItemInput = z.object({
-  title: z.string().trim().min(3, "Band nomi juda qisqa"),
+  title: z.string().trim().min(3, "Reja nomi juda qisqa"),
   expectedResult: z.string().trim().min(3, "Kutilgan natija kiritilmagan"),
   dueDate: optionalDate,
 });
 
 export const planInput = z
   .object({
-    title: z.string().trim().min(3, "Reja nomi juda qisqa"),
+    title: z.string().trim().min(3, "Safar nomi juda qisqa"),
     goal: z.string().trim().min(10, "Maqsad kamida 10 belgi bo'lsin"),
     country: z.string().trim().min(2, "Davlat kiritilmagan"),
     city: optionalText,
     startDate: dateString,
     endDate: dateString,
-    items: z.array(planItemInput).min(1, "Yo'l xaritasida kamida bitta band bo'lsin").max(50),
+    items: z.array(planItemInput).min(1, "Safarda kamida bitta reja bo'lsin").max(50),
   })
   .refine((v) => Date.parse(v.endDate) >= Date.parse(v.startDate), {
     message: "Tugash sanasi boshlanish sanasidan oldin bo'lmasin",
@@ -61,7 +61,7 @@ export const itemResultInput = z
     failureReason: optionalText,
   })
   .refine((v) => v.result !== "NOT_ACHIEVED" || (v.failureReason?.length ?? 0) >= 3, {
-    message: "Erishilmagan band uchun sababini yozing",
+    message: "Erishilmagan reja uchun sababini yozing",
     path: ["failureReason"],
   });
 

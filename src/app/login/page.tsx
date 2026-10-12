@@ -70,7 +70,7 @@ export default function LoginPage() {
         <div className="max-w-md space-y-4">
           <h1 className="text-3xl leading-tight font-semibold text-white">Xorijiy investitsiya safarlari monitoringi</h1>
           <p className="text-sm leading-relaxed text-sidebar-foreground/80">
-            Reja tuziladi va tasdiqlanadi, safar natijalari hujjatlar bilan biriktiriladi, AI reja bilan natija
+            Safar rejalari tuziladi va tasdiqlanadi, natijalar hujjatlar bilan biriktiriladi, AI rejalar bilan natija
             mosligini baholaydi, kelishuvlar yakunigacha kuzatib boriladi.
           </p>
         </div>

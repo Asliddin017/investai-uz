@@ -28,7 +28,7 @@ import {
 } from "@/components/ui";
 
 const STAGES: { key: PlanStatus[]; label: string; icon: string }[] = [
-  { key: ["DRAFT", "REJECTED"], label: "Reja tuzildi", icon: "edit_note" },
+  { key: ["DRAFT", "REJECTED"], label: "Safar rejalashtirildi", icon: "edit_note" },
   { key: ["PENDING"], label: "Tasdiqlashda", icon: "hourglass_top" },
   { key: ["APPROVED"], label: "Safar va natijalar", icon: "flight" },
   { key: ["REPORTED"], label: "AI tahlil va monitoring", icon: "monitoring" },
@@ -140,12 +140,12 @@ function RoadmapTab({ plan, onAddAgreement }: { plan: PlanDetail; onAddAgreement
   return (
     <Card>
       <CardHeader
-        title="Yo'l xaritasi"
+        title="Rejalar"
         icon="route"
         description={
           plan.can.report
-            ? "Safardan keyin har bir band uchun natijani kiriting va erishilgan kelishuvlarni qo'shing"
-            : `${plan.items.length} ta band`
+            ? "Safardan keyin har bir reja uchun natijani kiriting va erishilgan kelishuvlarni qo'shing"
+            : `${plan.items.length} ta reja`
         }
       />
       <ol className="divide-y">
@@ -243,7 +243,7 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
           <EmptyState icon="handshake" title="Kelishuvlar hali kiritilmagan">
             {plan.status === "APPROVED" || plan.status === "REPORTED"
               ? "Safarda imzolangan shartnoma, memorandum yoki bitimlarni qo'shing."
-              : "Kelishuvlar reja tasdiqlangandan keyin kiritiladi."}
+              : "Kelishuvlar safar tasdiqlangandan keyin kiritiladi."}
           </EmptyState>
         </div>
       ) : (
@@ -252,7 +252,7 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
             <thead className="border-b bg-muted/40 text-left text-muted-foreground">
               <tr>
                 <th className="px-4 py-2.5 font-medium">Kelishuv</th>
-                <th className="px-4 py-2.5 font-medium">Reja bandi</th>
+                <th className="px-4 py-2.5 font-medium">Reja</th>
                 <th className="px-4 py-2.5 font-medium">Summa</th>
                 <th className="px-4 py-2.5 font-medium">Muddat</th>
                 <th className="w-40 px-4 py-2.5 font-medium">Bajarilishi</th>
@@ -335,7 +335,7 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
     return (
       <Card className="p-5">
         <EmptyState icon="auto_awesome" title="AI tahlil hali o'tkazilmagan">
-          Safar natijalari kiritilib, hisobot yakunlangach AI reja bilan natija mosligini avtomatik baholaydi.
+          Safar natijalari kiritilib, hisobot yakunlangach AI rejalar bilan natijalar mosligini avtomatik baholaydi.
         </EmptyState>
       </Card>
     );
@@ -345,7 +345,7 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
     <div className="space-y-4">
       <Card>
         <CardHeader
-          title="Reja va natija mosligi"
+          title="Rejalar va natijalar mosligi"
           icon="auto_awesome"
           description={`${formatDateTime(latest.createdAt)} · ${latest.model === "heuristic" ? "oddiy hisob-kitob (AI kaliti sozlanmagan)" : latest.model}`}
           actions={
@@ -385,7 +385,7 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left text-muted-foreground">
               <tr>
-                <th className="px-5 py-2 font-medium">Reja bandi</th>
+                <th className="px-5 py-2 font-medium">Reja</th>
                 <th className="w-48 px-5 py-2 font-medium">Moslik</th>
                 <th className="px-5 py-2 font-medium">Izoh</th>
               </tr>
@@ -440,7 +440,7 @@ function HistoryTab({ plan }: { plan: PlanDetail }) {
       <Card>
         <CardHeader title="Tasdiqlash tarixi" icon="history" />
         {plan.approvals.length === 0 ? (
-          <div className="p-5 text-sm text-muted-foreground">Reja hali tasdiqqa yuborilmagan.</div>
+          <div className="p-5 text-sm text-muted-foreground">Safar hali tasdiqqa yuborilmagan.</div>
         ) : (
           <ol className="space-y-4 p-5">
             {plan.approvals.map((a) => (
@@ -472,9 +472,9 @@ function HistoryTab({ plan }: { plan: PlanDetail }) {
       </Card>
       <Card>
         <CardHeader
-          title="Reja variantlari"
+          title="Safar variantlari"
           icon="difference"
-          description="Har safar tasdiqqa yuborilganda variant o'zgarmas holda saqlanadi; v1 — dastlabki reja"
+          description="Har gal tasdiqqa yuborilganda variant o'zgarmas holda saqlanadi; v1 — dastlabki variant"
           actions={
             plan.versions.length > 0 && (
               <Select className="w-auto" value={version} onChange={(e) => setVersion(Number(e.target.value))}>
@@ -558,7 +558,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
     <div className="space-y-5">
       <div className="space-y-3">
         <Link href="/plans" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <MSIcon name="arrow_back" className="text-[18px]" /> Rejalar
+          <MSIcon name="arrow_back" className="text-[18px]" /> Safarlar
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
@@ -619,7 +619,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
               </Button>
             )}
             {plan.can.submit && (
-              <Button icon="send" loading={action.isPending} onClick={() => run("/submit", "Reja tasdiqlashga yuborildi")}>
+              <Button icon="send" loading={action.isPending} onClick={() => run("/submit", "Safar tasdiqlashga yuborildi")}>
                 Tasdiqqa yuborish
               </Button>
             )}
@@ -628,7 +628,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
                 <Button variant="outline" icon="undo" className="text-destructive" onClick={() => setRejectOpen(true)}>
                   Rad etish
                 </Button>
-                <Button variant="success" icon="verified" loading={action.isPending} onClick={() => run("/approve", "Reja tasdiqlandi")}>
+                <Button variant="success" icon="verified" loading={action.isPending} onClick={() => run("/approve", "Safar tasdiqlandi")}>
                   Tasdiqlash
                 </Button>
               </>
@@ -643,7 +643,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
                 icon="fact_check"
                 loading={action.isPending}
                 disabled={pendingResults > 0}
-                title={pendingResults > 0 ? `${pendingResults} ta band natijasi kiritilmagan` : undefined}
+                title={pendingResults > 0 ? `${pendingResults} ta reja natijasi kiritilmagan` : undefined}
                 onClick={() => {
                   if (confirm("Hisobotni yakunlaysizmi? Shundan keyin natijalarni o'zgartirib bo'lmaydi, AI tahlil boshlanadi.")) {
                     run("/report", "Hisobot yakunlandi, AI tahlil tayyor");
@@ -682,7 +682,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
         value={tab}
         onChange={setTab}
         items={[
-          { value: "roadmap", label: "Yo'l xaritasi", icon: "route", count: plan.items.length },
+          { value: "roadmap", label: "Rejalar", icon: "route", count: plan.items.length },
           { value: "agreements", label: "Kelishuvlar", icon: "handshake", count: plan.agreements.length },
           {
             value: "analysis",
@@ -701,8 +701,8 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
       <Dialog
         open={rejectOpen}
         onClose={() => setRejectOpen(false)}
-        title="Rejani rad etish"
-        description="Reja sababi bilan yaratuvchisiga qayta tahrirlash uchun qaytariladi"
+        title="Safarni rad etish"
+        description="Safar sababi bilan yaratuvchisiga qayta tahrirlash uchun qaytariladi"
         footer={
           <>
             <Button variant="ghost" onClick={() => setRejectOpen(false)}>
@@ -714,7 +714,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
               loading={action.isPending}
               disabled={rejectComment.trim().length < 5}
               onClick={() => {
-                run("/reject", "Reja rad etildi va tuzuvchiga qaytarildi", { comment: rejectComment });
+                run("/reject", "Safar rad etildi va tuzuvchiga qaytarildi", { comment: rejectComment });
                 setRejectOpen(false);
                 setRejectComment("");
               }}
@@ -733,7 +733,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
         open={remindOpen}
         onClose={() => setRemindOpen(false)}
         title="Hisobotni yakunlashni so'rash"
-        description="Reja muallifi va uning tashkilotidagi hamkasblari eslatmani rejada, menyuda va dashboardda ko'radi"
+        description="Safar muallifi va uning tashkilotidagi hamkasblari eslatmani safar sahifasida, menyuda va dashboardda ko'radi"
         footer={
           <>
             <Button variant="ghost" onClick={() => setRemindOpen(false)}>

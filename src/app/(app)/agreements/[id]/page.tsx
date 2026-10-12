@@ -132,7 +132,7 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
             <div className="text-sm text-muted-foreground">
               {documentTypeLabel(a.documentType)} · {a.partner}
               {a.partnerCountry ? ` (${a.partnerCountry})` : ""} ·{" "}
-              {a.planItem ? `${a.planItem.order}-band: ${a.planItem.title}` : "Rejadan tashqari yutuq"}
+              {a.planItem ? `${a.planItem.order}-reja: ${a.planItem.title}` : "Rejadan tashqari yutuq"}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">

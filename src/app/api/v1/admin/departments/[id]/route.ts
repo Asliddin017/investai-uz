@@ -23,7 +23,7 @@ export const DELETE = withUser<Params>(async ({ req, user, params }) => {
   });
   if (!dept) throw notFound("Tashkilot topilmadi");
   if (dept._count.users > 0 || dept._count.plans > 0) {
-    throw badRequest("Xodimlari yoki rejalari bor tashkilotni o'chirib bo'lmaydi");
+    throw badRequest("Xodimlari yoki safarlari bor tashkilotni o'chirib bo'lmaydi");
   }
   await db.department.delete({ where: { id: dept.id } });
   await audit(user, { action: "department.delete", entityType: "department", entityId: dept.id, summary: `Tashkilot o'chirildi: ${dept.name}` }, req);

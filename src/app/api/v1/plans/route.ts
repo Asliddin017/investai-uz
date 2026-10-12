@@ -70,6 +70,6 @@ export const POST = withUser(async ({ req, user }) => {
       },
     },
   });
-  await audit(user, { action: "plan.create", entityType: "plan", entityId: plan.id, summary: `Reja yaratildi: «${plan.title}»` }, req);
+  await audit(user, { action: "plan.create", entityType: "plan", entityId: plan.id, summary: `Safar yaratildi: «${plan.title}»` }, req);
   return { id: plan.id };
 });

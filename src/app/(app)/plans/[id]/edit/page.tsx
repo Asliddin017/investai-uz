@@ -18,7 +18,7 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
   if (isLoading) return <Spinner />;
   if (error || !data) return <ErrorBox error={error} />;
   if (!data.can.edit) {
-    return <ErrorBox error={new Error("Bu rejani tahrirlab bo'lmaydi: u tasdiqlashda yoki allaqachon tasdiqlangan")} />;
+    return <ErrorBox error={new Error("Bu safarni tahrirlab bo'lmaydi: u tasdiqlashda yoki allaqachon tasdiqlangan")} />;
   }
 
   return (
@@ -26,10 +26,10 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
       <PageHeader
         back={
           <Link href={`/plans/${id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <MSIcon name="arrow_back" className="text-[18px]" /> Rejaga qaytish
+            <MSIcon name="arrow_back" className="text-[18px]" /> Safarga qaytish
           </Link>
         }
-        title="Rejani tahrirlash"
+        title="Safarni tahrirlash"
         description={data.title}
       />
       <PlanForm plan={data} />

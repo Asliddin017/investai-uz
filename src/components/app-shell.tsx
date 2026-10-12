@@ -15,7 +15,7 @@ const NAV: { section?: string; items: NavItem[] }[] = [
   {
     items: [
       { href: "/dashboard", label: "Dashboard", icon: "space_dashboard", perm: "nav:dashboard" },
-      { href: "/plans", label: "Rejalar", icon: "flight_takeoff", perm: "nav:plans" },
+      { href: "/plans", label: "Safarlar", icon: "flight_takeoff", perm: "nav:plans" },
       { href: "/agreements", label: "Kelishuvlar", icon: "handshake", perm: "nav:agreements" },
       { href: "/help", label: "Yordam", icon: "help", perm: [] },
     ],

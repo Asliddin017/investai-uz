@@ -11,7 +11,7 @@ const REPEAT_AFTER_MS = 24 * 60 * 60 * 1000;
 /** The approver asks the author to close the trip report (at most once a day per plan). */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
-  if (!canRemindReport(user, plan)) throw forbidden("Bu reja uchun hisobot so'rab bo'lmaydi");
+  if (!canRemindReport(user, plan)) throw forbidden("Bu safar uchun hisobot so'rab bo'lmaydi");
   const { message } = remindInput.parse(await req.json().catch(() => ({})));
 
   const last = plan.reminders[0];

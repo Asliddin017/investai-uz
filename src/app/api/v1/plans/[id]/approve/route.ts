@@ -6,7 +6,7 @@ import { audit } from "@/lib/audit";
 
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
-  if (!canApprovePlan(user, plan)) throw forbidden("Bu rejani tasdiqlay olmaysiz");
+  if (!canApprovePlan(user, plan)) throw forbidden("Bu safarni tasdiqlay olmaysiz");
   const body = (await req.json().catch(() => ({}))) as { comment?: string };
   const comment = typeof body.comment === "string" && body.comment.trim() ? body.comment.trim() : null;
 

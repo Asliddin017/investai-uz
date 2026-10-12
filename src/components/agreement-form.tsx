@@ -75,7 +75,7 @@ export function AgreementFormDialog({ open, onClose, onSaved, planId, items, agr
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label="Reja bandi"
+          label="Reja"
           hint="Rejada yo'q, safarda qo'shimcha erishilgan kelishuv bo'lsa — «Rejadan tashqari»"
           className="sm:col-span-2"
         >

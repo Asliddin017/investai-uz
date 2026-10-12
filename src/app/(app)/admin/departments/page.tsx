@@ -118,7 +118,7 @@ export default function DepartmentsPage() {
                 <th className="px-4 py-2.5 font-medium">Nomi</th>
                 <th className="px-4 py-2.5 font-medium">Turi</th>
                 <th className="px-4 py-2.5 text-center font-medium">Xodimlar</th>
-                <th className="px-4 py-2.5 text-center font-medium">Rejalar</th>
+                <th className="px-4 py-2.5 text-center font-medium">Safarlar</th>
                 <th className="px-4 py-2.5 text-center font-medium">Ruxsat sozlamalari</th>
                 <th className="px-4 py-2.5" />
               </tr>

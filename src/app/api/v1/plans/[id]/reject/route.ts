@@ -8,7 +8,7 @@ import { audit } from "@/lib/audit";
 /** Rejection returns the plan to its author for correction and resubmission. */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
-  if (!canApprovePlan(user, plan)) throw forbidden("Bu rejani rad eta olmaysiz");
+  if (!canApprovePlan(user, plan)) throw forbidden("Bu safarni rad eta olmaysiz");
   const { comment } = rejectInput.parse(await req.json());
 
   await db.$transaction([

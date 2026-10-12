@@ -17,7 +17,7 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
   const data = agreementInput.parse(await req.json());
   if (data.planItemId) {
     const item = await db.planItem.findFirst({ where: { id: data.planItemId, planId: agreement.planId } });
-    if (!item) throw badRequest("Tanlangan reja bandi bu rejaga tegishli emas");
+    if (!item) throw badRequest("Tanlangan reja bu safarga tegishli emas");
   }
   await db.agreement.update({
     where: { id: agreement.id },

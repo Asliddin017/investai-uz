@@ -40,17 +40,17 @@ const AnalysisSchema = z.object({
 export type AnalysisResult = z.infer<typeof AnalysisSchema> & { model: string };
 
 const SYSTEM_PROMPT = `Siz viloyat hokimligi investitsiya bo'limi uchun tahlilchisiz.
-Xorijiy safar rejasidagi har bir bandning kutilgan natijasini safardan keyin kiritilgan haqiqiy natija va
+Xorijiy safardagi har bir rejaning kutilgan natijasini safardan keyin kiritilgan haqiqiy natija va
 tuzilgan kelishuvlar (shartnoma, memorandum, bitim) bilan solishtirasiz.
 
 Baholash qoidalari:
-- Har bir band uchun 0–100 oralig'ida moslik balli bering: kutilgan natijaga to'liq erishilgan va hujjat bilan
+- Har bir reja uchun 0–100 oralig'ida moslik balli bering: kutilgan natijaga to'liq erishilgan va hujjat bilan
   tasdiqlangan bo'lsa 90–100; erishilgan, lekin hujjat yo'q yoki natija kutilgandan kichik bo'lsa 50–85;
   erishilmagan bo'lsa 0–20 (sababi asosli bo'lsa ham ball past qoladi).
-- Umumiy ball (score) — bandlar ballarining o'rtachasi, butun songa yaxlitlangan.
+- Umumiy ball (score) — rejalar ballarining o'rtachasi, butun songa yaxlitlangan.
 - Rejadan tashqari kelishuvlar umumiy ballga qo'shilmaydi; ularni extraAchievements maydonida alohida yozing.
 - Xulosa (summary) 2–4 jumladan iborat bo'lsin, rahbar o'qiydi: aniq raqamlar, ortiqcha so'zsiz.
-- Tavsiyalar (recommendations) — erishilmagan bandlar bo'yicha keyingi aniq qadamlar, 0–4 ta.
+- Tavsiyalar (recommendations) — erishilmagan rejalar bo'yicha keyingi aniq qadamlar, 0–4 ta.
 - Hamma matn o'zbek tilida (lotin yozuvida).`;
 
 /** Plain ratio used when no API key is configured or the API call fails. */
@@ -75,7 +75,7 @@ export function heuristicAnalysis(input: AnalysisInput): AnalysisResult {
   const failed = input.items.filter((i) => i.result === "NOT_ACHIEVED").length;
   return {
     score,
-    summary: `${input.items.length} ta reja bandidan ${achieved} tasiga erishildi, ${failed} tasiga erishilmadi. Reja va natija mosligi ${score}%.`,
+    summary: `${input.items.length} ta rejadan ${achieved} tasiga erishildi, ${failed} tasiga erishilmadi. Rejalar va natijalar mosligi ${score}%.`,
     items,
     extraAchievements: input.extraAgreements.length
       ? `Rejadan tashqari ${input.extraAgreements.length} ta kelishuv tuzildi: ${input.extraAgreements.map((a) => `${a.title} (${a.partner})`).join("; ")}.`
@@ -83,7 +83,7 @@ export function heuristicAnalysis(input: AnalysisInput): AnalysisResult {
     recommendations: input.items
       .filter((i) => i.result === "NOT_ACHIEVED")
       .slice(0, 4)
-      .map((i) => `"${i.title}" bandi bo'yicha qayta muzokara rejasini tuzing.`),
+      .map((i) => `"${i.title}" rejasi bo'yicha qayta muzokara o'tkazing.`),
     model: FALLBACK_MODEL,
   };
 }
@@ -103,7 +103,7 @@ export async function analyzePlan(input: AnalysisInput): Promise<AnalysisResult>
       messages: [
         {
           role: "user",
-          content: `Quyidagi reja va safar natijalarini tahlil qiling:\n\n${JSON.stringify(input, null, 2)}`,
+          content: `Quyidagi safar rejalari va natijalarini tahlil qiling:\n\n${JSON.stringify(input, null, 2)}`,
         },
       ],
     });

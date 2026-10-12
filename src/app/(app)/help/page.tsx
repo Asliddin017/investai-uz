@@ -10,22 +10,22 @@ type Guide = { key: string; title: string; icon: string; who: string; steps: Rea
 const GUIDES: Guide[] = [
   {
     key: "author",
-    title: "Reja tuzuvchi uchun",
+    title: "Safar tashkilotchisi uchun",
     icon: "flight_takeoff",
     who: "Viloyat apparati o'rinbosarlari, boshqarma boshliqlari, tuman/shahar hokimlari",
     show: (can) => can("plan:create"),
     steps: [
       <>
-        <b>Reja tuzing.</b> Rejalar → «Yangi reja»: nomi, maqsadi, muddati va yo&apos;l xaritasi (har bir kutilgan natija
-        alohida band). «Saqlash va tasdiqqa yuborish»ni bosing.
+        <b>Safar yarating.</b> Safarlar → «Yangi safar»: nomi, maqsadi, muddati va safardagi rejalar (har bir reja
+        kutilgan natijasi bilan). «Saqlash va tasdiqqa yuborish»ni bosing.
       </>,
       <>
         <b>Javobni kuting.</b> Tasdiqlansa — safarga boring. Rad etilsa — sababni o&apos;qing, «Tahrirlash»ni bosib tuzating
         va qayta yuboring.
       </>,
       <>
-        <b>Safardan keyin natijani kiriting.</b> Reja sahifasida har bir band yonidagi «Natija»: erishildi yoki erishilmadi
-        (sababi bilan). Shartnoma imzolangan bo&apos;lsa — «Kelishuv» orqali uni amalga oshish muddati va hujjati bilan qo&apos;shing.
+        <b>Safardan keyin natijani kiriting.</b> Safar sahifasida har bir reja yonidagi «Natija»: erishildi yoki erishilmadi
+        (sababi bilan). Shartnoma imzolangan bo&apos;lsa — o&apos;sha reja yonidagi «Kelishuv» orqali uni amalga oshish muddati va hujjati bilan qo&apos;shing.
       </>,
       <>
         <b>«Hisobotni yakunlash»ni bosing.</b> AI xulosa avtomatik tayyor bo&apos;ladi. Keyin kelishuvlar muddati tugaguncha
@@ -37,21 +37,21 @@ const GUIDES: Guide[] = [
     key: "approver",
     title: "Kotibiyat mudiri uchun",
     icon: "verified",
-    who: "Rejalarni tasdiqlovchi",
+    who: "Safarlarni tasdiqlovchi",
     show: (can) => can("plan:approve"),
     steps: [
       <>
-        <b>Dashboard → «Mening vazifalarim».</b> Tasdiq kutayotgan rejalar shu yerda.
+        <b>Dashboard → «Mening vazifalarim».</b> Tasdiq kutayotgan safarlar shu yerda.
       </>,
       <>
-        <b>Rejani oching</b> va «Tasdiqlash» yoki «Rad etish»ni bosing. Rad etsangiz, nimani tuzatish kerakligini aniq yozing —
-        reja muallifga qaytadi.
+        <b>Safarni oching</b> va «Tasdiqlash» yoki «Rad etish»ni bosing. Rad etsangiz, nimani tuzatish kerakligini aniq yozing —
+        safar muallifga qaytadi.
       </>,
       <>
-        <b>Safardan keyin</b> xodim natijani kiritmasa, reja sahifasidagi «Hisobotni so&apos;rash» bilan eslating.
+        <b>Safardan keyin</b> xodim natijani kiritmasa, safar sahifasidagi «Hisobotni so&apos;rash» bilan eslating.
       </>,
       <>
-        <b>Natijani ko&apos;ring:</b> reja sahifasidagi «AI tahlil» — reja qanchalik bajarilgani foizda; dashboardda barcha
+        <b>Natijani ko&apos;ring:</b> safar sahifasidagi «AI tahlil» — rejalar qanchalik bajarilgani foizda; dashboardda barcha
         tashkilotlar kesimida.
       </>,
     ],
@@ -67,7 +67,7 @@ const GUIDES: Guide[] = [
         <b>Dashboard</b> — umumiy holat: nechta safar, qanchasi natijali, o&apos;rtacha AI moslik, muddati o&apos;tgan kelishuvlar.
       </>,
       <>
-        <b>Rejalar</b> ro&apos;yxatida «AI moslik» ustuni bo&apos;yicha past natijali safarlarni toping va oching.
+        <b>Safarlar</b> ro&apos;yxatida «AI moslik» ustuni bo&apos;yicha past natijali safarlarni toping va oching.
       </>,
     ],
   },
@@ -105,7 +105,7 @@ export default function HelpPage() {
         <MSIcon name="lightbulb" className="text-primary" />
         <div>
           Eng oddiy yo&apos;l: <Link href="/dashboard" className="font-medium text-primary hover:underline">Dashboard</Link>dagi
-          «Mening vazifalarim» ro&apos;yxatiga qarang — sizdan hozir nima kutilayotgani shu yerda. Har bir reja sahifasining
+          «Mening vazifalarim» ro&apos;yxatiga qarang — sizdan hozir nima kutilayotgani shu yerda. Har bir safar sahifasining
           tepasida esa «Keyingi qadam» bloki aynan qaysi tugmani bosishni aytadi.
         </div>
       </Card>

@@ -28,12 +28,12 @@ export default function PlansPage() {
   return (
     <div>
       <PageHeader
-        title="Rejalar"
-        description="Xorijiy investitsiya safarlari rejalari va ularning holati"
+        title="Safarlar"
+        description="Xorijiy investitsiya safarlari, ulardagi rejalar va holati"
         actions={
           can("plan:create") && (
             <Link href="/plans/new">
-              <Button icon="add">Yangi reja</Button>
+              <Button icon="add">Yangi safar</Button>
             </Link>
           )
         }
@@ -73,19 +73,19 @@ export default function PlansPage() {
       ) : error ? (
         <ErrorBox error={error} />
       ) : !data?.length ? (
-        <EmptyState icon="flight_takeoff" title="Rejalar topilmadi">
-          {can("plan:create") ? "Yangi safar rejasini yaratish uchun yuqoridagi tugmani bosing." : null}
+        <EmptyState icon="flight_takeoff" title="Safarlar topilmadi">
+          {can("plan:create") ? "Yangi safar yaratish uchun yuqoridagi tugmani bosing." : null}
         </EmptyState>
       ) : (
         <Card className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-sm">
             <thead className="border-b bg-muted/40 text-left text-muted-foreground">
               <tr>
-                <th className="px-4 py-2.5 font-medium">Reja</th>
+                <th className="px-4 py-2.5 font-medium">Safar</th>
                 <th className="px-4 py-2.5 font-medium">Muddati</th>
                 <th className="px-4 py-2.5 font-medium">Tuzuvchi</th>
                 <th className="px-4 py-2.5 font-medium">Holati</th>
-                <th className="px-4 py-2.5 text-center font-medium">Bandlar</th>
+                <th className="px-4 py-2.5 text-center font-medium">Rejalar</th>
                 <th className="px-4 py-2.5 text-center font-medium">Kelishuv</th>
                 <th className="px-4 py-2.5 text-center font-medium">AI moslik</th>
               </tr>
