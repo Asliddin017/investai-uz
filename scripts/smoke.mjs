@@ -263,6 +263,8 @@ check("xodim o'z ismini o'zgartira olmaydi", r.data.find((u) => u.username === "
 await tuman("/profile/password", { method: "PUT", json: { currentPassword: "YangiParol123", newPassword: PASSWORD } });
 
 // 13. Name change goes through a request
+const observer = await login("kuzatuvchi");
+const kuzatuvchiLike = (newName) => observer("/profile/name-requests", { method: "POST", json: { newName } });
 r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Yusupov Bekzod Akmalovich", reason: "Pasport" } });
 check("xodim ism so'rovi yuboradi", r.status === 200, JSON.stringify(r.data));
 const nameReqId = r.data.id;
@@ -270,6 +272,17 @@ r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Bo
 check("bir vaqtda ikkita ochiq so'rov bo'lmaydi", r.status === 400, r.status);
 r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Кarimov Akmal" } });
 check("aralash alifboli ism qabul qilinmaydi", r.status === 400, r.status);
+await admin(`/admin/permissions/users/${approverUser.id}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "admin:users", state: "GRANT" }] },
+});
+r = await approver("/admin/name-requests?status=PENDING");
+check("admin faqat o'zi boshqara oladigan xodimlar so'rovini ko'radi", r.status === 200 && !r.data.some((x) => x.id === nameReqId), r.data.length);
+await admin(`/admin/permissions/users/${approverUser.id}`, { method: "PUT", json: { overrides: [] } });
+r = await kuzatuvchiLike("Karimov  Akmal");
+check("boshqa xodimning ismiga so'rov yuborib bo'lmaydi", r.status === 400, r.status);
+r = await kuzatuvchiLike("КАРИМОВ АКМАЛ");
+check("kirilldagi bir xil ismga ham so'rov yuborib bo'lmaydi", r.status === 400, r.status);
 r = await tuman(`/admin/name-requests/${nameReqId}/approve`, { method: "POST", json: {} });
 check("xodim o'z so'rovini tasdiqlay olmaydi", r.status === 403, r.status);
 r = await admin(`/admin/name-requests/${nameReqId}/approve`, { method: "POST", json: {} });

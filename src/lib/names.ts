@@ -19,3 +19,21 @@ export function normalizeName(input: string) {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// Uzbek Cyrillic → Latin, so "Каримов" and "Karimov" count as the same name.
+const CYRILLIC_TO_LATIN: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "j", з: "z", и: "i", й: "y", к: "k",
+  л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "x", ц: "ts",
+  ч: "ch", ш: "sh", щ: "sh", ъ: "", ы: "i", ь: "", э: "e", ю: "yu", я: "ya", ў: "o", қ: "q", ғ: "g", ҳ: "h",
+};
+
+/**
+ * Duplicate-detection key: case, spacing, apostrophes and script are ignored. Names are already
+ * restricted to one alphabet, and every change is reviewed by an administrator who sees the login.
+ */
+export function nameKey(input: string) {
+  return normalizeName(input)
+    .toLowerCase()
+    .replace(/./gu, (ch) => CYRILLIC_TO_LATIN[ch] ?? ch)
+    .replace(/[^a-z]/g, "");
+}

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { badRequest, requirePermission, withUser } from "@/lib/api";
-import { loadReviewableRequest } from "@/lib/name-requests";
+import { assertNameNotTaken, loadReviewableRequest } from "@/lib/name-requests";
 import { reviewInput } from "@/lib/schemas";
 
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
@@ -18,6 +18,7 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
       data: { status: "APPROVED", reviewerId: user.id, reviewComment: comment, reviewedAt: new Date() },
     });
     if (count === 0) throw badRequest("So'rov allaqachon ko'rib chiqilgan");
+    await assertNameNotTaken(tx, request.userId, request.newName);
     await tx.user.update({ where: { id: request.userId }, data: { fullName: request.newName } });
   });
   return { ok: true };

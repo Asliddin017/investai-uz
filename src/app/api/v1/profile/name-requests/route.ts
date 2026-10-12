@@ -2,11 +2,13 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { badRequest, withUser } from "@/lib/api";
 import { nameRequestInput } from "@/lib/schemas";
+import { assertNameNotTaken } from "@/lib/name-requests";
 
 /** A user asks to change their full name; it takes effect only after an administrator approves. */
 export const POST = withUser(async ({ req, user }) => {
   const { newName, reason } = nameRequestInput.parse(await req.json());
   if (newName === user.fullName) throw badRequest("Yangi ism hozirgisi bilan bir xil");
+  await assertNameNotTaken(db, user.id, newName);
   try {
     const created = await db.nameChangeRequest.create({
       data: { userId: user.id, oldName: user.fullName, newName, reason },
