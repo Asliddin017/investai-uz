@@ -7,7 +7,7 @@ Viloyat hokimligi uchun xorijiy investitsiya safarlarini rejadan kelishuv yakuni
 1. **Reja tuziladi** — viloyat apparati o'rinbosarlari, boshqarma boshliqlari, tuman/shahar hokimlari kiritadi: nomi, maqsadi, muddati, yo'l xaritasi (bandlar).
 2. **Tasdiqlanadi** — viloyat apparati investitsiya bo'limi kotibiyat mudiri tasdiqlaydi yoki sababini yozib rad etadi. Rad etilgan reja muallifga tahrirlash uchun qaytadi. Har yuborilgan variant tarixda o'zgarmas saqlanadi (v1 — dastlabki). Tasdiqlangan reja o'zgartirilmaydi.
 3. **Safar natijalari** — har bir band: erishildi / erishilmadi (sababi bilan). Erishilgan kelishuvlar (shartnoma, memorandum, bitim) amalga oshish muddati va asos hujjatlari bilan biriktiriladi. Rejada yo'q kelishuv — qo'shimcha yutuq.
-4. **AI tahlil** — hisobot yakunlanganda Claude reja bilan natija mosligini foizda baholaydi (`ANTHROPIC_API_KEY` bo'lmasa oddiy hisob-kitob ishlaydi).
+4. **AI tahlil** — hisobot yakunlanganda Gemini reja bilan natija mosligini foizda baholaydi (`GEMINI_API_KEY` bo'lmasa oddiy hisob-kitob ishlaydi).
 5. **Kelishuv monitoringi** — muddat davomida bajarilgan ishlar yozib boriladi; barcha kelishuvlar yopilganda reja yakunlanadi.
 
 Diagramma: [`docs/diagrams/umumiy.png`](docs/diagrams/umumiy.png).
@@ -41,7 +41,7 @@ Buyruq vaqtinchalik parolni chiqaradi va bu amal jurnalga yoziladi.
 
 ## Texnologiyalar
 
-Next.js 15 (App Router, API routes) · TypeScript · Tailwind CSS 4 · Prisma + PostgreSQL · TanStack Query · Claude API (`@anthropic-ai/sdk`) · Vercel Blob (yopiq fayllar).
+Next.js 15 (App Router, API routes) · TypeScript · Tailwind CSS 4 · Prisma + PostgreSQL · TanStack Query · Gemini API (`@google/genai`) · Vercel Blob (yopiq fayllar).
 
 ## Lokal ishga tushirish
 
@@ -63,7 +63,7 @@ Seed faqat rol ruxsatlari va `admin` foydalanuvchisini yaratadi (parol `Demo1234
 | --- | --- |
 | `DATABASE_URL`, `DIRECT_URL` | PostgreSQL ulanishi (pooled va to'g'ridan-to'g'ri) |
 | `AUTH_SECRET` | sessiya imzosi, kamida 32 belgi |
-| `ANTHROPIC_API_KEY` | AI moslik tahlili (ixtiyoriy) |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | AI moslik tahlili (ixtiyoriy; kalit aistudio.google.com dan, model standart `gemini-3.8-flash`). Bepul tarifda yuborilgan ma'lumotlar Google tomonidan mahsulotlarni yaxshilashga ishlatilishi mumkin |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob — hujjatlar saqlanadi (Vercel'da majburiy, lokalda `uploads/`) |
 | `SEED_PASSWORD`, `SEED_DEMO` | seed paroli; `SEED_DEMO=1` — demo bo'limlar, foydalanuvchilar va rejalar |
 

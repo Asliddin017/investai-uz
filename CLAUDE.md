@@ -69,7 +69,7 @@ node scripts/smoke.mjs # e2e flow against a running, seeded server (BASE_URL)
 
 ## Architecture Overview
 
-Next.js 15 full-stack app: API routes under `src/app/api/v1`, Prisma/Postgres (`prisma/schema.prisma`), UI in `src/app/(app)`. Permissions: catalog + role defaults in `src/lib/permissions.ts`, resolved role → department → user override. Plan state rules in `src/lib/plans.ts`. AI analysis in `src/lib/ai.ts` (Claude, heuristic fallback).
+Next.js 15 full-stack app: API routes under `src/app/api/v1`, Prisma/Postgres (`prisma/schema.prisma`), UI in `src/app/(app)`. Permissions: catalog + role defaults in `src/lib/permissions.ts`, resolved role → department → user override. Plan state rules in `src/lib/plans.ts`. AI analysis in `src/lib/ai.ts` (Gemini via `@google/genai`, heuristic fallback).
 
 ## Conventions & Patterns
 

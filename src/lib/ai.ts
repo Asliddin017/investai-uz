@@ -1,8 +1,8 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import { ApiError, GoogleGenAI } from "@google/genai";
 import * as z from "zod/v4";
 
-export const AI_MODEL = "claude-opus-5-5";
+/** Gemini model for the analysis; override with GEMINI_MODEL when Google retires it. */
+export const AI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 export const FALLBACK_MODEL = "heuristic";
 
 export type AnalysisInputItem = {
@@ -88,32 +88,38 @@ export function heuristicAnalysis(input: AnalysisInput): AnalysisResult {
   };
 }
 
-export async function analyzePlan(input: AnalysisInput): Promise<AnalysisResult> {
-  if (!process.env.ANTHROPIC_API_KEY) return heuristicAnalysis(input);
+/** JSON Schema for Gemini's structured output; `$schema` is not among the keywords it accepts. */
+function responseSchema() {
+  const { $schema: _ignored, ...schema } = z.toJSONSchema(AnalysisSchema) as Record<string, unknown>;
+  return schema;
+}
 
-  const client = new Anthropic();
+export async function analyzePlan(input: AnalysisInput): Promise<AnalysisResult> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return heuristicAnalysis(input);
+
+  const ai = new GoogleGenAI({ apiKey });
   try {
-    const response = await client.beta.messages.parse({
+    const response = await ai.models.generateContent({
       model: AI_MODEL,
-      max_tokens: 16000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "medium", format: betaZodOutputFormat(AnalysisSchema) },
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `Quyidagi safar rejalari va natijalarini tahlil qiling:\n\n${JSON.stringify(input, null, 2)}`,
-        },
-      ],
+      contents: `Quyidagi safar rejalari va natijalarini tahlil qiling:
+
+${JSON.stringify(input, null, 2)}`,
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        responseMimeType: "application/json",
+        responseJsonSchema: responseSchema(),
+        httpOptions: { timeout: 60_000 },
+      },
     });
-    if (response.stop_reason === "refusal" || !response.parsed_output) {
+    const parsed = AnalysisSchema.safeParse(JSON.parse(response.text ?? ""));
+    if (!parsed.success) {
+      console.error("AI tahlil: javob sxemaga mos emas", parsed.error.issues[0]);
       return heuristicAnalysis(input);
     }
-    const parsed = response.parsed_output;
-    return { ...parsed, score: Math.max(0, Math.min(100, Math.round(parsed.score))), model: response.model };
+    return { ...parsed.data, score: Math.max(0, Math.min(100, Math.round(parsed.data.score))), model: AI_MODEL };
   } catch (err) {
-    if (err instanceof Anthropic.APIError) {
+    if (err instanceof ApiError) {
       console.error(`AI tahlil xatosi (${err.status}):`, err.message);
     } else {
       console.error("AI tahlil xatosi:", err);
