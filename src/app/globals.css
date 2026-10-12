@@ -96,6 +96,16 @@ body {
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
   line-height: 1;
   user-select: none;
+  /* A fixed square box: the ligature name never widens the layout while the font loads. */
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Set by the inline script in the root layout once the icon font has loaded. */
+html:not(.icons-ready) .material-symbols-outlined {
+  color: transparent;
 }
 
 /* Status text colors tuned for light backgrounds get a lighter step on dark ones. */
