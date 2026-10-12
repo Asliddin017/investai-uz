@@ -10,7 +10,9 @@ import { PlanStatusBadge, PLAN_STATUS_OPTIONS } from "@/components/status";
 import { Button, Card, EmptyState, ErrorBox, Input, MSIcon, PageHeader, Select, Spinner } from "@/components/ui";
 
 export default function PlansPage() {
-  const { can } = useSession();
+  const { user, can } = useSession();
+  // The filter only matters to someone who also sees trips created by others (see planVisibilityWhere).
+  const seesOthers = can("plan:view_all") || (can("plan:view_department") && !!user.departmentId);
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
   const [mine, setMine] = useState(false);
@@ -60,10 +62,10 @@ export default function PlansPage() {
             </option>
           ))}
         </Select>
-        {can("plan:create") && (
+        {can("plan:create") && seesOthers && (
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} className="h-4 w-4" />
-            Faqat meniki
+            Faqat men yaratganlar
           </label>
         )}
       </div>
