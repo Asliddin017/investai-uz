@@ -6,7 +6,8 @@ import { use, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatDate, formatDateTime, formatMoney } from "@/lib/client";
 import type { ItemResult, PlanDetail, PlanItem, PlanStatus } from "@/lib/types";
-import { useToast } from "@/components/providers";
+import { useSession, useToast } from "@/components/providers";
+import { CloseAgreementDialog, type CloseAs } from "@/components/close-agreement";
 import { AgreementFormDialog } from "@/components/agreement-form";
 import { NextStep } from "@/components/next-step";
 import { AgreementStatusBadge, documentTypeLabel, ItemResultLabel, PlanStatusBadge } from "@/components/status";
@@ -224,7 +225,13 @@ function RoadmapTab({ plan, onAddAgreement }: { plan: PlanDetail; onAddAgreement
 }
 
 function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void }) {
+  const { can } = useSession();
+  const qc = useQueryClient();
+  const [closing, setClosing] = useState<{ id: string; as: CloseAs } | null>(null);
   const extra = plan.agreements.filter((a) => !a.planItemId);
+  // Closing is the approver's step; offer it here so they need not open each agreement.
+  const canClose = (a: PlanDetail["agreements"][number]) => can("agreement:complete") && a.status === "ACTIVE";
+  const showActions = plan.agreements.some(canClose);
   return (
     <Card>
       <CardHeader
@@ -258,6 +265,7 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
                 <th className="px-4 py-2.5 font-medium">Muddat</th>
                 <th className="w-40 px-4 py-2.5 font-medium">Bajarilishi</th>
                 <th className="px-4 py-2.5 font-medium">Holati</th>
+                {showActions && <th className="px-4 py-2.5 text-right font-medium">Amal</th>}
               </tr>
             </thead>
             <tbody>
@@ -302,6 +310,25 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
                     <td className="px-4 py-3">
                       <AgreementStatusBadge status={a.displayStatus} />
                     </td>
+                    {showActions && (
+                      <td className="px-4 py-3">
+                        {canClose(a) && (
+                          <div className="flex justify-end gap-1.5">
+                            <Button size="sm" variant="success" icon="task_alt" onClick={() => setClosing({ id: a.id, as: "COMPLETED" })}>
+                              Yakunlash
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              icon="block"
+                              title="Bekor qilish"
+                              aria-label="Bekor qilish"
+                              onClick={() => setClosing({ id: a.id, as: "CANCELLED" })}
+                            />
+                          </div>
+                        )}
+                      </td>
+                    )}
                   </ClickableRow>
                 );
               })}
@@ -314,6 +341,14 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
           Rejadan tashqari {extra.length} ta kelishuv qo&apos;shimcha yutuq sifatida hisoblanadi va AI moslik foiziga
           kirmaydi.
         </div>
+      )}
+      {closing && (
+        <CloseAgreementDialog
+          agreementId={closing.id}
+          closeAs={closing.as}
+          onClose={() => setClosing(null)}
+          onDone={() => qc.invalidateQueries({ queryKey: ["plan", plan.id] })}
+        />
       )}
     </Card>
   );

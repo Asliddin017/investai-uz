@@ -5,6 +5,7 @@ import { use, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatBytes, formatDate, formatDateTime, formatMoney } from "@/lib/client";
 import { uploadAgreementFiles } from "@/lib/upload";
+import { CloseAgreementDialog, type CloseAs } from "@/components/close-agreement";
 import type { AgreementDetail, PlanDetail } from "@/lib/types";
 import { useToast } from "@/components/providers";
 import { AgreementFormDialog } from "@/components/agreement-form";
@@ -13,11 +14,9 @@ import {
   Button,
   Card,
   CardHeader,
-  Dialog,
   EmptyState,
   ErrorBox,
   Field,
-  Input,
   MSIcon,
   ProgressBar,
   Spinner,
@@ -41,8 +40,7 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
   const [note, setNote] = useState("");
   const [progress, setProgress] = useState<number | null>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [closeAs, setCloseAs] = useState<"COMPLETED" | "CANCELLED" | null>(null);
-  const [closeNote, setCloseNote] = useState("");
+  const [closeAs, setCloseAs] = useState<CloseAs | null>(null);
 
   const { data: a, isLoading, error } = useQuery({
     queryKey: ["agreement", id],
@@ -89,18 +87,6 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
     onSuccess: async () => {
       await refresh();
       toast("Fayl o'chirildi");
-    },
-    onError: (e) => toast(e.message, "error"),
-  });
-
-  const close = useMutation({
-    mutationFn: () => api(`/agreements/${id}/status`, { method: "POST", json: { status: closeAs, note: closeNote } }),
-    onSuccess: async () => {
-      setCloseAs(null);
-      setCloseNote("");
-      await refresh();
-      await qc.invalidateQueries({ queryKey: ["plans"] });
-      toast("Kelishuv holati yangilandi");
     },
     onError: (e) => toast(e.message, "error"),
   });
@@ -315,34 +301,7 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
         </Card>
       </div>
 
-      <Dialog
-        open={closeAs !== null}
-        onClose={() => setCloseAs(null)}
-        title={closeAs === "COMPLETED" ? "Kelishuvni yakunlash" : "Kelishuvni bekor qilish"}
-        description={
-          closeAs === "COMPLETED"
-            ? "Kelishuv to'liq bajarildi — monitoring to'xtatiladi"
-            : "Kelishuv amalga oshmadi — monitoring to'xtatiladi"
-        }
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setCloseAs(null)}>
-              Orqaga
-            </Button>
-            <Button
-              variant={closeAs === "COMPLETED" ? "success" : "destructive"}
-              loading={close.isPending}
-              onClick={() => close.mutate()}
-            >
-              Tasdiqlash
-            </Button>
-          </>
-        }
-      >
-        <Field label="Izoh">
-          <Input value={closeNote} onChange={(e) => setCloseNote(e.target.value)} placeholder="Yakuniy natija yoki sabab" />
-        </Field>
-      </Dialog>
+      <CloseAgreementDialog agreementId={id} closeAs={closeAs} onClose={() => setCloseAs(null)} onDone={refresh} />
 
       {editOpen && plan.data && (
         <AgreementFormDialog
