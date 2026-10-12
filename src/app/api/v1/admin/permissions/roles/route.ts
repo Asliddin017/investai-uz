@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { badRequest, forbidden, requirePermission, withUser } from "@/lib/api";
 import { LOCKED_SUPER_ADMIN_PERMISSIONS, PERMISSION_KEYS, ROLES } from "@/lib/permissions";
 import { rolesMatrixInput } from "@/lib/schemas";
-import { assertActorKeepsPermissionAdmin } from "@/lib/permission-guard";
+import { assertActorKeepsPermissionAdmin, assertGrantsWithinActor } from "@/lib/permission-guard";
 
 const ROLE_SET = new Set<string>(ROLES.map((r) => r.value));
 
@@ -33,6 +33,12 @@ export const PUT = withUser(async ({ req, user }) => {
     if (role === "SUPER_ADMIN") for (const locked of LOCKED_SUPER_ADMIN_PERMISSIONS) set.add(locked);
     normalized[role] = [...set];
   }
+  const current = await db.rolePermission.findMany({ where: { role: { in: Object.keys(normalized) as Role[] } } });
+  const had = new Set(current.map((r) => `${r.role}|${r.permission}`));
+  assertGrantsWithinActor(
+    user,
+    Object.entries(normalized).flatMap(([role, perms]) => perms.filter((p) => !had.has(`${role}|${p}`))),
+  );
   await assertActorKeepsPermissionAdmin(user, { roleDefaults: normalized });
 
   const writes = Object.entries(normalized).flatMap(([role, perms]) => [

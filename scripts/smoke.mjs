@@ -164,6 +164,26 @@ r = await approver(`/admin/users/${adminUser.id}`, {
   json: { fullName: adminUser.fullName, username: "admin", password: "Hijacked123", role: "SUPER_ADMIN", isActive: true },
 });
 check("admin:users egasi Super Admin parolini o'zgartira olmaydi", r.status === 403, r.status);
+r = await approver("/admin/users", {
+  method: "POST",
+  json: { fullName: "Kuchli xodim", username: "smoke-strong", password: "Password123", role: "BOSHQARMA_BOSHLIGI", isActive: true },
+});
+check("o'zidan kuchli huquqli foydalanuvchi yaratilmaydi", r.status === 403, r.status);
+await admin(`/admin/permissions/users/${approverUser.id}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "admin:permissions", state: "GRANT" }] },
+});
+r = await approver(`/admin/permissions/departments/${adminUser.departmentId}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "plan:approve", state: "DENY" }] },
+});
+check("Super Admin ishlaydigan tashkilot ruxsatini oddiy admin o'zgartira olmaydi", r.status === 403, r.status);
+const tumanDept = users.find((u) => u.username === "tuman").departmentId;
+r = await approver(`/admin/permissions/departments/${tumanDept}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "admin:departments", state: "GRANT" }] },
+});
+check("o'zida yo'q ruxsatni tashkilotga bera olmaydi", r.status === 403, r.status);
 await admin(`/admin/permissions/users/${approverUser.id}`, { method: "PUT", json: { overrides: [] } });
 
 r = await admin(`/admin/permissions/departments/${adminUser.departmentId}`, {

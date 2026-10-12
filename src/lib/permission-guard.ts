@@ -12,6 +12,51 @@ export function assertCanManageRole(actor: CurrentUser, targetRole: Role, newRol
   }
 }
 
+/** A non-Super-Admin can only hand out permissions they hold themselves. */
+export function assertGrantsWithinActor(actor: CurrentUser, permissions: Iterable<string>) {
+  if (actor.role === "SUPER_ADMIN") return;
+  const missing = [...permissions].filter((p) => !actor.permissions.has(p));
+  if (missing.length > 0) {
+    throw forbidden(`O'zingizda yo'q ruxsatni bera olmaysiz: ${missing.join(", ")}`);
+  }
+}
+
+async function effectiveFor(role: Role, departmentId: string | null, userOverrides: Override[]) {
+  const [roleRows, deptRows] = await Promise.all([
+    db.rolePermission.findMany({ where: { role } }),
+    departmentId ? db.departmentPermission.findMany({ where: { departmentId } }) : Promise.resolve([]),
+  ]);
+  return resolvePermissions(
+    roleRows.map((r) => r.permission),
+    deptRows,
+    userOverrides,
+  );
+}
+
+/**
+ * A non-Super-Admin may only create or edit an account whose effective permissions —
+ * before and after the change — stay within the actor's own. Blocks taking over a
+ * stronger account (password reset) and moving someone into a more privileged role or
+ * organization.
+ */
+export async function assertUserWithinActor(
+  actor: CurrentUser,
+  target: { id?: string; role: Role; departmentId: string | null } | null,
+  next: { role: Role; departmentId: string | null },
+) {
+  if (actor.role === "SUPER_ADMIN") return;
+  const overrides = target?.id ? await db.userPermission.findMany({ where: { userId: target.id } }) : [];
+  if (target) assertGrantsWithinActor(actor, await effectiveFor(target.role, target.departmentId, overrides));
+  assertGrantsWithinActor(actor, await effectiveFor(next.role, next.departmentId, overrides));
+}
+
+/** Department-wide overrides also reach Super Admins in that organization. */
+export async function assertCanEditDepartmentPermissions(actor: CurrentUser, departmentId: string) {
+  if (actor.role === "SUPER_ADMIN") return;
+  const superAdmins = await db.user.count({ where: { departmentId, role: "SUPER_ADMIN" } });
+  if (superAdmins > 0) throw forbidden("Super Admin ishlaydigan tashkilot ruxsatlarini faqat Super Admin o'zgartiradi");
+}
+
 /**
  * Refuses a permission change that would strip the acting admin of `admin:permissions`
  * at any level (role matrix, own department, own user overrides) — otherwise one save

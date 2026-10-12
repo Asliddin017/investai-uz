@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { badRequest, notFound, requirePermission, withUser } from "@/lib/api";
 import { hashPassword } from "@/lib/auth";
 import { userInput } from "@/lib/schemas";
-import { assertCanManageRole } from "@/lib/permission-guard";
+import { assertCanManageRole, assertUserWithinActor } from "@/lib/permission-guard";
 
 export const PUT = withUser<{ id: string }>(async ({ req, user, params }) => {
   requirePermission(user, "admin:users");
@@ -10,9 +10,13 @@ export const PUT = withUser<{ id: string }>(async ({ req, user, params }) => {
   if (!target) throw notFound("Foydalanuvchi topilmadi");
   const data = userInput.parse(await req.json());
   assertCanManageRole(user, target.role, data.role);
+  await assertUserWithinActor(user, target, { role: data.role, departmentId: data.departmentId });
 
-  if (target.id === user.id && (!data.isActive || data.role !== target.role)) {
-    throw badRequest("O'z hisobingizni o'chira yoki rolini o'zgartira olmaysiz");
+  if (
+    target.id === user.id &&
+    (!data.isActive || data.role !== target.role || data.departmentId !== target.departmentId)
+  ) {
+    throw badRequest("O'z hisobingizni o'chira, rolini yoki tashkilotini o'zgartira olmaysiz");
   }
   if (data.username !== target.username) {
     const taken = await db.user.findUnique({ where: { username: data.username } });
