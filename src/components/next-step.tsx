@@ -65,16 +65,18 @@ const ICON_TONE: Record<Step["tone"], string> = {
   warn: "text-destructive",
 };
 
-export function NextStep({ plan }: { plan: PlanDetail }) {
+/** `action` is the button the step talks about, shown right next to the instruction. */
+export function NextStep({ plan, action }: { plan: PlanDetail; action?: ReactNode }) {
   const step = nextStepFor(plan);
   return (
-    <div className={cn("flex items-start gap-3 rounded-lg border px-4 py-3", TONE[step.tone])}>
-      <MSIcon name={step.icon} className={cn("mt-0.5 text-[22px]", ICON_TONE[step.tone])} />
-      <div>
+    <div className={cn("flex flex-wrap items-center gap-3 rounded-lg border px-4 py-3", TONE[step.tone])}>
+      <MSIcon name={step.icon} className={cn("text-[22px]", ICON_TONE[step.tone])} />
+      <div className="min-w-[220px] flex-1">
         <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Keyingi qadam</div>
         <div className="font-medium">{step.title}</div>
         {step.text && <div className="mt-0.5 text-sm text-muted-foreground">{step.text}</div>}
       </div>
+      {action}
     </div>
   );
 }

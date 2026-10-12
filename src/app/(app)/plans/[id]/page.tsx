@@ -645,28 +645,32 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
                 Hisobotni so&apos;rash
               </Button>
             )}
-            {plan.can.report && pendingResults === 0 && (
-              <Button
-                icon="fact_check"
-                loading={action.isPending}
-                disabled={pendingResults > 0}
-                title={pendingResults > 0 ? `${pendingResults} ta reja natijasi kiritilmagan` : undefined}
-                onClick={() => {
-                  if (confirm("Hisobotni yakunlaysizmi? Shundan keyin natijalarni o'zgartirib bo'lmaydi, AI tahlil boshlanadi.")) {
-                    run("/report", "Hisobot yakunlandi, AI tahlil tayyor");
-                    setTab("analysis");
-                  }
-                }}
-              >
-                Hisobotni yakunlash
-              </Button>
-            )}
           </div>
         </div>
         <Stepper status={plan.status} />
       </div>
 
-      <NextStep plan={plan} />
+      <NextStep
+        plan={plan}
+        action={
+          plan.can.report &&
+          pendingResults === 0 && (
+            <Button
+              size="lg"
+              icon="fact_check"
+              loading={action.isPending}
+              onClick={() => {
+                if (confirm("Hisobotni yakunlaysizmi? Shundan keyin natijalarni o'zgartirib bo'lmaydi, AI tahlil boshlanadi.")) {
+                  run("/report", "Hisobot yakunlandi, AI tahlil tayyor");
+                  setTab("analysis");
+                }
+              }}
+            >
+              Hisobotni yakunlash
+            </Button>
+          )
+        }
+      />
       {plan.status === "APPROVED" && plan.reminders[0] && (
         <div className="flex items-start gap-2 rounded-md border border-amber-400/50 bg-amber-500/10 px-4 py-3 text-sm">
           <MSIcon name="notifications_active" className="text-amber-600" />
