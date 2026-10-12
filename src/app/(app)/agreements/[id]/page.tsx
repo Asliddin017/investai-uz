@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatBytes, formatDate, formatDateTime, formatMoney } from "@/lib/client";
+import { uploadAgreementFiles } from "@/lib/upload";
 import type { AgreementDetail, PlanDetail } from "@/lib/types";
 import { useToast } from "@/components/providers";
 import { AgreementFormDialog } from "@/components/agreement-form";
@@ -72,11 +73,7 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
   });
 
   const upload = useMutation({
-    mutationFn: (files: FileList) => {
-      const form = new FormData();
-      for (const f of Array.from(files)) form.append("files", f);
-      return api<{ count: number }>(`/agreements/${id}/attachments`, { method: "POST", body: form });
-    },
+    mutationFn: (files: FileList) => uploadAgreementFiles(id, Array.from(files)),
     onSuccess: async (r) => {
       await refresh();
       toast(`${r.count} ta hujjat biriktirildi`);

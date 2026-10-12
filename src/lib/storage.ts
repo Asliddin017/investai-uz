@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
-import { put, get, del } from "@vercel/blob";
+import { put, get, del, head } from "@vercel/blob";
 
 /**
  * Attachments are private: stored either in a private Vercel Blob store
@@ -12,7 +12,16 @@ const LOCAL_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
 
 export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 
-const blobConfigured = () => !!process.env.BLOB_READ_WRITE_TOKEN;
+export const blobConfigured = () => !!process.env.BLOB_READ_WRITE_TOKEN;
+
+/** Where an agreement's documents live; uploads outside this prefix are refused. */
+export const agreementFolder = (agreementId: string) => `agreements/${agreementId}/`;
+
+/** Size and type of a blob the browser uploaded directly, or null if it is not there. */
+export async function blobInfo(pathname: string) {
+  const info = await head(pathname).catch(() => null);
+  return info ? { size: info.size, contentType: info.contentType } : null;
+}
 
 function safeName(name: string) {
   return name.replace(/[^\p{L}\p{N}._-]+/gu, "_").slice(-120) || "fayl";
