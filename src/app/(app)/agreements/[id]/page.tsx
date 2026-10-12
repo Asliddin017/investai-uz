@@ -67,7 +67,7 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
       setNote("");
       setProgress(null);
       await refresh();
-      toast("Monitoring yozuvi qo'shildi");
+      toast("Holat saqlandi");
     },
     onError: (e) => toast(e.message, "error"),
   });
@@ -209,14 +209,17 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
                     />
                   </Field>
                   <Button
-                    icon="add"
+                    icon="save"
                     loading={addUpdate.isPending}
                     disabled={note.trim().length < 3}
                     onClick={() => addUpdate.mutate()}
                   >
-                    Yozuv qo&apos;shish
+                    Holatni saqlash
                   </Button>
                 </div>
+                {note.trim().length < 3 && (
+                  <p className="text-xs text-muted-foreground">Saqlash uchun avval nima bajarilganini yozing.</p>
+                )}
               </div>
             )}
             {a.updates.length === 0 ? (
