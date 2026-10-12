@@ -9,7 +9,7 @@ import { MSIcon } from "./ui";
 import { usePendingNameRequests } from "./name-requests-panel";
 import { useMyTasks } from "./my-tasks";
 
-type NavItem = { href: string; label: string; icon: string; perm: string | string[] };
+type NavItem = { href: string; label: string; icon: string; perm: string };
 
 const NAV: { section?: string; items: NavItem[] }[] = [
   {
@@ -17,7 +17,6 @@ const NAV: { section?: string; items: NavItem[] }[] = [
       { href: "/dashboard", label: "Dashboard", icon: "space_dashboard", perm: "nav:dashboard" },
       { href: "/plans", label: "Safarlar", icon: "flight_takeoff", perm: "nav:plans" },
       { href: "/agreements", label: "Kelishuvlar", icon: "handshake", perm: "nav:agreements" },
-      { href: "/help", label: "Yordam", icon: "help", perm: [] },
     ],
   },
   {
@@ -41,8 +40,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const taskCount = useMyTasks().data?.length ?? 0;
   const badges: Record<string, number> = { "/admin/users": pendingNames, "/dashboard": taskCount };
 
-  // An empty list means the item is open to everyone.
-  const allowed = (perm: NavItem["perm"]) => (Array.isArray(perm) ? perm.length === 0 || perm.some(can) : can(perm));
 
   async function logout() {
     await api("/auth/logout", { method: "POST" }).catch(() => undefined);
@@ -65,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
       <div className="flex-1 space-y-5 overflow-y-auto px-3 py-2">
         {NAV.map((group, gi) => {
-          const items = group.items.filter((i) => allowed(i.perm));
+          const items = group.items.filter((i) => can(i.perm));
           if (items.length === 0) return null;
           return (
             <div key={gi}>
