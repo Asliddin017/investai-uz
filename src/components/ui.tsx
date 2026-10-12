@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef, useEffect, type ReactNode } from "react";
+import { forwardRef, useEffect, type MouseEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/client";
 
 export function MSIcon({ name, className, filled }: { name: string; className?: string; filled?: boolean }) {
@@ -337,5 +338,24 @@ export function ScoreRing({ score, size = 96 }: { score: number; size?: number }
         {score}%
       </text>
     </svg>
+  );
+}
+
+/**
+ * A table row that opens `href` when clicked anywhere. Links, buttons and form controls
+ * inside keep their own behavior; Ctrl/Cmd-click opens a new tab like a normal link.
+ */
+export function ClickableRow({ href, className, children }: { href: string; className?: string; children: ReactNode }) {
+  const router = useRouter();
+  function onClick(e: MouseEvent<HTMLTableRowElement>) {
+    if ((e.target as HTMLElement).closest("a, button, input, select, textarea, label")) return;
+    if (window.getSelection()?.toString()) return; // the user is selecting text, not navigating
+    if (e.ctrlKey || e.metaKey) window.open(href, "_blank");
+    else router.push(href);
+  }
+  return (
+    <tr onClick={onClick} className={cn("cursor-pointer", className)}>
+      {children}
+    </tr>
   );
 }

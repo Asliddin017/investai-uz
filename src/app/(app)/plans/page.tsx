@@ -7,7 +7,7 @@ import { api, formatDate } from "@/lib/client";
 import type { PlanListItem } from "@/lib/types";
 import { useSession } from "@/components/providers";
 import { PlanStatusBadge, PLAN_STATUS_OPTIONS } from "@/components/status";
-import { Button, Card, EmptyState, ErrorBox, Input, MSIcon, PageHeader, Select, Spinner } from "@/components/ui";
+import { Button, Card, ClickableRow, EmptyState, ErrorBox, Input, MSIcon, PageHeader, Select, Spinner } from "@/components/ui";
 
 export default function PlansPage() {
   const { user, can } = useSession();
@@ -94,7 +94,7 @@ export default function PlansPage() {
             </thead>
             <tbody>
               {data.map((p) => (
-                <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                <ClickableRow key={p.id} className="border-b last:border-0 hover:bg-muted/30" href={`/plans/${p.id}`}>
                   <td className="px-4 py-3">
                     <Link href={`/plans/${p.id}`} className="font-medium hover:text-primary hover:underline">
                       {p.title}
@@ -129,7 +129,7 @@ export default function PlansPage() {
                   <td className="px-4 py-3 text-center tabular-nums">
                     {p.score === null ? <span className="text-muted-foreground">—</span> : <b>{p.score}%</b>}
                   </td>
-                </tr>
+                </ClickableRow>
               ))}
             </tbody>
           </table>

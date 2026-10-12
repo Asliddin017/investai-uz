@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatDate, formatMoney } from "@/lib/client";
 import type { AgreementListItem } from "@/lib/types";
 import { AgreementStatusBadge, documentTypeLabel } from "@/components/status";
-import { Card, EmptyState, ErrorBox, Input, MSIcon, PageHeader, ProgressBar, Select, Spinner } from "@/components/ui";
+import { Card, ClickableRow, EmptyState, ErrorBox, Input, MSIcon, PageHeader, ProgressBar, Select, Spinner } from "@/components/ui";
 
 const FILTERS = [
   { value: "", label: "Barchasi" },
@@ -79,7 +79,7 @@ export default function AgreementsPage() {
               {data.map((a) => {
                 const left = daysUntil(a.deadline);
                 return (
-                  <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
+                  <ClickableRow key={a.id} className="border-b last:border-0 hover:bg-muted/30" href={`/agreements/${a.id}`}>
                     <td className="px-4 py-3">
                       <Link href={`/agreements/${a.id}`} className="font-medium hover:text-primary hover:underline">
                         {a.title}
@@ -117,7 +117,7 @@ export default function AgreementsPage() {
                     <td className="px-4 py-3">
                       <AgreementStatusBadge status={a.displayStatus} />
                     </td>
-                  </tr>
+                  </ClickableRow>
                 );
               })}
             </tbody>

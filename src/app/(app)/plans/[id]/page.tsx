@@ -14,6 +14,7 @@ import {
   Button,
   Card,
   CardHeader,
+  ClickableRow,
   Dialog,
   EmptyState,
   ErrorBox,
@@ -264,7 +265,7 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
                 const item = plan.items.find((i) => i.id === a.planItemId);
                 const left = daysUntil(a.deadline);
                 return (
-                  <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
+                  <ClickableRow key={a.id} href={`/agreements/${a.id}`} className="border-b last:border-0 hover:bg-muted/30">
                     <td className="px-4 py-3">
                       <Link href={`/agreements/${a.id}`} className="font-medium hover:text-primary hover:underline">
                         {a.title}
@@ -301,7 +302,7 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
                     <td className="px-4 py-3">
                       <AgreementStatusBadge status={a.displayStatus} />
                     </td>
-                  </tr>
+                  </ClickableRow>
                 );
               })}
             </tbody>
