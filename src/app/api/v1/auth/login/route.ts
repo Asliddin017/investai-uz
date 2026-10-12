@@ -13,12 +13,13 @@ export async function POST(req: Request) {
     const user = await db.user.findUnique({ where: { username: username.toLowerCase() } });
     if (!user || !user.isActive || !(await verifyPassword(password, user.passwordHash))) {
       await audit(
-        user ? { id: user.id, fullName: user.fullName, username: user.username } : { label: `@${username}` },
+        // Never log raw input for unknown accounts: people sometimes type their password into the login field.
+        user ? { id: user.id, fullName: user.fullName, username: user.username } : { label: "noma'lum login" },
         {
           action: "auth.login_failed",
           entityType: "user",
           entityId: user?.id,
-          summary: `Noto'g'ri parol yoki faol bo'lmagan hisob: @${username}`,
+          summary: user ? `Noto'g'ri parol yoki faol bo'lmagan hisob: @${user.username}` : "Mavjud bo'lmagan login bilan urinish",
         },
         req,
       );

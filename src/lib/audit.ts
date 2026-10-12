@@ -11,9 +11,14 @@ export type AuditEntry = {
   meta?: Prisma.InputJsonValue;
 };
 
+/**
+ * Client IP from the headers the hosting proxy sets (Vercel overwrites these, so a client
+ * cannot forge them there). Elsewhere it is best-effort and must not be treated as proof.
+ */
 function clientIp(req?: Request) {
-  const forwarded = req?.headers.get("x-forwarded-for");
-  return forwarded ? forwarded.split(",")[0].trim() : (req?.headers.get("x-real-ip") ?? null);
+  const h = req?.headers;
+  const ip = h?.get("x-vercel-forwarded-for") ?? h?.get("x-real-ip") ?? h?.get("x-forwarded-for")?.split(",").at(-1);
+  return ip ? ip.trim().slice(0, 64) : null;
 }
 
 /**
