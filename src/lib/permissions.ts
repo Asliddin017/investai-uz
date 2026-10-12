@@ -72,9 +72,12 @@ const CREATOR_DEFAULTS = [
   "ai:analyze",
 ];
 
+const AUTHOR_ONLY = new Set(["plan:create", "plan:report", "agreement:manage"]);
+
 /** Initial role → permission matrix, written to the DB by the seed. */
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, string[]> = {
-  SUPER_ADMIN: PERMISSIONS.map((p) => p.key),
+  // The administrator runs the system and does not go on trips, so the author-side work is left out.
+  SUPER_ADMIN: PERMISSIONS.map((p) => p.key).filter((k) => !AUTHOR_ONLY.has(k)),
   TASDIQLOVCHI: [
     "nav:dashboard",
     "nav:plans",
