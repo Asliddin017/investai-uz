@@ -3,6 +3,7 @@ import { forbidden, notFound, withUser } from "@/lib/api";
 import { canReportPlan } from "@/lib/plans";
 import { itemResultInput } from "@/lib/schemas";
 import { loadPlanForUser } from "@/lib/serialize";
+import { audit } from "@/lib/audit";
 
 export const PUT = withUser<{ id: string; itemId: string }>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
@@ -19,5 +20,6 @@ export const PUT = withUser<{ id: string; itemId: string }>(async ({ req, user, 
       failureReason: data.result === "NOT_ACHIEVED" ? data.failureReason : null,
     },
   });
+  await audit(user, { action: "plan.item_result", entityType: "plan", entityId: plan.id, summary: `«${plan.title}», ${item.order}-band: ${data.result === "ACHIEVED" ? "erishildi" : data.result === "NOT_ACHIEVED" ? "erishilmadi" : "natija olib tashlandi"}` }, req);
   return { ok: true };
 });

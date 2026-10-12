@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, formatDateTime } from "@/lib/client";
 import { useToast } from "@/components/providers";
+import { PasswordForm } from "@/components/password-form";
 import { Badge, Button, Card, CardHeader, ErrorBox, Field, Input, MSIcon, PageHeader, Spinner } from "@/components/ui";
 
 type Theme = "LIGHT" | "DARK" | "SYSTEM";
@@ -27,6 +28,8 @@ type Profile = {
   roleLabel: string;
   departmentName: string | null;
   theme: Theme;
+  canRenameSelf: boolean;
+  mustChangePassword: boolean;
 };
 
 const THEMES: { value: Theme; label: string; icon: string; hint: string }[] = [
@@ -39,6 +42,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
   const router = useRouter();
   const toast = useToast();
   const qc = useQueryClient();
+  const [fullName, setFullName] = useState(profile.fullName);
   const [position, setPosition] = useState(profile.position ?? "");
   const [theme, setTheme] = useState<Theme>(profile.theme);
 
@@ -54,7 +58,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
   }, [profile.theme]);
 
   const save = useMutation({
-    mutationFn: () => api("/profile", { method: "PUT", json: { position, theme } }),
+    mutationFn: () => api("/profile", { method: "PUT", json: { position, theme, ...(profile.canRenameSelf ? { fullName } : {}) } }),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["profile"] });
       toast("Profil saqlandi");
@@ -68,9 +72,15 @@ function ProfileForm({ profile }: { profile: Profile }) {
       <CardHeader title="Shaxsiy ma'lumotlar" icon="badge" />
       <div className="space-y-5 p-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="F.I.Sh." hint="O'zgartirish uchun quyida so'rov yuboring">
-            <Input value={profile.fullName} disabled />
-          </Field>
+          {profile.canRenameSelf ? (
+            <Field label="F.I.Sh." required>
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            </Field>
+          ) : (
+            <Field label="F.I.Sh." hint="O'zgartirish uchun quyida so'rov yuboring">
+              <Input value={profile.fullName} disabled />
+            </Field>
+          )}
           <Field label="Lavozimi">
             <Input value={position} onChange={(e) => setPosition(e.target.value)} />
           </Field>
@@ -216,57 +226,13 @@ function NameRequestCard({ profile }: { profile: Profile }) {
   );
 }
 
-function PasswordForm() {
-  const toast = useToast();
-  const [current, setCurrent] = useState("");
-  const [next, setNext] = useState("");
-  const [repeat, setRepeat] = useState("");
-  const mismatch = repeat.length > 0 && next !== repeat;
-
-  const save = useMutation({
-    mutationFn: () =>
-      api("/profile/password", { method: "PUT", json: { currentPassword: current, newPassword: next } }),
-    onSuccess: () => {
-      setCurrent("");
-      setNext("");
-      setRepeat("");
-      toast("Parol o'zgartirildi");
-    },
-    onError: (e) => toast(e.message, "error"),
-  });
-
+function PasswordCard() {
   return (
     <Card>
-      <CardHeader title="Parolni o'zgartirish" icon="password" />
-      <form
-        className="space-y-4 p-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          save.mutate();
-        }}
-      >
-        <Field label="Joriy parol" required>
-          <Input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
-        </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Yangi parol" required hint="Kamida 8 belgi">
-            <Input type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
-          </Field>
-          <Field label="Yangi parolni takrorlang" required error={mismatch ? "Parollar mos emas" : null}>
-            <Input type="password" autoComplete="new-password" value={repeat} onChange={(e) => setRepeat(e.target.value)} />
-          </Field>
-        </div>
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            icon="lock_reset"
-            loading={save.isPending}
-            disabled={!current || next.length < 8 || next !== repeat}
-          >
-            Parolni o&apos;zgartirish
-          </Button>
-        </div>
-      </form>
+      <CardHeader title="Parolni o'zgartirish" icon="password" description="Boshqa qurilmalardagi kirishlar avtomatik yopiladi" />
+      <div className="p-5">
+        <PasswordCard />
+      </div>
     </Card>
   );
 }
@@ -295,7 +261,7 @@ export default function ProfilePage() {
         </span>
       </Card>
       <ProfileForm profile={data} />
-      <NameRequestCard profile={data} />
+      {!data.canRenameSelf && <NameRequestCard profile={data} />}
       <PasswordForm />
     </div>
   );

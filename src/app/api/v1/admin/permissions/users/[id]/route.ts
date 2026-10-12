@@ -9,6 +9,7 @@ import {
   assertUserWithinActor,
 } from "@/lib/permission-guard";
 import { overridesInput } from "@/lib/schemas";
+import { audit } from "@/lib/audit";
 
 type Params = { id: string };
 
@@ -52,5 +53,6 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
       data: overrides.map((o) => ({ userId: target.id, permission: o.permission, state: o.state, reason: o.reason })),
     }),
   ]);
+  await audit(user, { action: "permissions.user", entityType: "user", entityId: target.id, summary: `${target.fullName} (@${target.username}): ${overrides.length} ta shaxsiy sozlama`, meta: overrides }, req);
   return { ok: true };
 });

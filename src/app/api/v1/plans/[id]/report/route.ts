@@ -3,11 +3,12 @@ import { badRequest, forbidden, withUser } from "@/lib/api";
 import { canReportPlan, completePlanIfDone } from "@/lib/plans";
 import { runPlanAnalysis } from "@/lib/analysis";
 import { loadPlanForUser } from "@/lib/serialize";
+import { audit } from "@/lib/audit";
 
 export const maxDuration = 120;
 
 /** Closes the trip report: every roadmap item must have a result. Runs the AI comparison right away. */
-export const POST = withUser<{ id: string }>(async ({ user, params }) => {
+export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
   if (!canReportPlan(user, plan)) throw forbidden("Hisobotni yakunlay olmaysiz");
   const pending = plan.items.filter((i) => i.result === "PENDING");
@@ -21,5 +22,6 @@ export const POST = withUser<{ id: string }>(async ({ user, params }) => {
   ]);
   const analysis = await runPlanAnalysis(plan.id, user.id);
   await completePlanIfDone(plan.id);
+  await audit(user, { action: "plan.report", entityType: "plan", entityId: plan.id, summary: `«${plan.title}» hisoboti yakunlandi, AI moslik ${analysis.score}%` }, req);
   return { ok: true, score: analysis.score };
 });

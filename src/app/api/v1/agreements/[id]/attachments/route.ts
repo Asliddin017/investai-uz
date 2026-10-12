@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { badRequest, forbidden, withUser } from "@/lib/api";
 import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
 import { MAX_UPLOAD_BYTES, saveFile } from "@/lib/storage";
+import { audit } from "@/lib/audit";
 
 /** Attaches the documents that prove the agreement (contract scan, memorandum, protocol). */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
@@ -27,5 +28,6 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
       },
     });
   }
+  await audit(user, { action: "attachment.upload", entityType: "agreement", entityId: agreement.id, summary: `«${agreement.title}»ga hujjat: ${files.map((f) => f.name).join(", ")}` }, req);
   return { ok: true, count: files.length };
 });

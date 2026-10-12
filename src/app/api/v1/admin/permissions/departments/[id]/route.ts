@@ -7,6 +7,7 @@ import {
   assertCanEditDepartmentPermissions,
   assertDepartmentOverridesWithinActor,
 } from "@/lib/permission-guard";
+import { audit } from "@/lib/audit";
 
 type Params = { id: string };
 
@@ -37,5 +38,6 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
       data: overrides.map((o) => ({ departmentId: dept.id, permission: o.permission, state: o.state, reason: o.reason })),
     }),
   ]);
+  await audit(user, { action: "permissions.department", entityType: "department", entityId: dept.id, summary: `${dept.name}: ${overrides.length} ta sozlama`, meta: overrides }, req);
   return { ok: true };
 });

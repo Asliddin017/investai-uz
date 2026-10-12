@@ -3,6 +3,7 @@ import { forbidden, withUser } from "@/lib/api";
 import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
 import { completePlanIfDone } from "@/lib/plans";
 import { agreementStatusInput } from "@/lib/schemas";
+import { audit } from "@/lib/audit";
 
 /** Ends monitoring: the agreement is fulfilled or cancelled. */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
@@ -26,5 +27,6 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
     }),
   ]);
   await completePlanIfDone(agreement.planId);
+  await audit(user, { action: "agreement.close", entityType: "agreement", entityId: agreement.id, summary: `«${agreement.title}» ${completed ? "yakunlandi" : "bekor qilindi"}` }, req);
   return { ok: true };
 });

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { forbidden, withUser } from "@/lib/api";
 import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
 import { agreementUpdateInput } from "@/lib/schemas";
+import { audit } from "@/lib/audit";
 
 /** A monitoring entry: what was done during the agreement's term and the progress reached. */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
@@ -14,5 +15,6 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
     }),
     db.agreement.update({ where: { id: agreement.id }, data: { progress: data.progress } }),
   ]);
+  await audit(user, { action: "agreement.progress", entityType: "agreement", entityId: agreement.id, summary: `«${agreement.title}»: ${data.progress}% — ${data.note}` }, req);
   return { ok: true };
 });

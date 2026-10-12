@@ -133,10 +133,72 @@ function UserDialog({ user, onClose }: { user: UserRow | null; onClose: () => vo
   );
 }
 
+function ResetPasswordDialog({ user, onClose }: { user: UserRow; onClose: () => void }) {
+  const toast = useToast();
+  const [password, setPassword] = useState<string | null>(null);
+  const reset = useMutation({
+    mutationFn: () => api<{ password: string }>(`/admin/users/${user.id}/reset-password`, { method: "POST" }),
+    onSuccess: (r) => setPassword(r.password),
+    onError: (e) => toast(e.message, "error"),
+  });
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title="Parolni tiklash"
+      description={`${user.fullName} (@${user.username})`}
+      footer={
+        password ? (
+          <Button onClick={onClose}>Tayyor</Button>
+        ) : (
+          <>
+            <Button variant="ghost" onClick={onClose}>
+              Bekor qilish
+            </Button>
+            <Button icon="lock_reset" loading={reset.isPending} onClick={() => reset.mutate()}>
+              Vaqtinchalik parol berish
+            </Button>
+          </>
+        )
+      }
+    >
+      {password ? (
+        <div className="space-y-3 text-sm">
+          <p>Vaqtinchalik parol — uni xodimga bering:</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 rounded-md border bg-muted px-3 py-2 text-center font-mono text-lg tracking-wider select-all">
+              {password}
+            </code>
+            <Button
+              variant="outline"
+              icon="content_copy"
+              onClick={() => navigator.clipboard.writeText(password).then(() => toast("Nusxa olindi"))}
+            >
+              Nusxa
+            </Button>
+          </div>
+          <p className="text-muted-foreground">
+            Bu parol faqat hozir ko&apos;rinadi. Xodim u bilan kirgach, tizim darhol o&apos;z parolini qo&apos;yishni
+            so&apos;raydi. Uning boshqa qurilmalardagi kirishlari yopildi.
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm">
+          Xodim parolini unutgan bo&apos;lsa, unga vaqtinchalik parol beriladi. Eski parol ishlamay qoladi, birinchi kirishda
+          xodim o&apos;z yangi parolini qo&apos;yadi. Amal jurnalga yoziladi.
+        </p>
+      )}
+    </Dialog>
+  );
+}
+
 export default function UsersPage() {
   const { can } = useSession();
   const [editing, setEditing] = useState<UserRow | null | undefined>(undefined);
   const [q, setQ] = useState("");
+  const [resetting, setResetting] = useState<UserRow | null>(null);
+  const { user: me } = useSession();
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin", "users"],
     queryFn: () => api<UserRow[]>("/admin/users"),
@@ -204,7 +266,12 @@ export default function UsersPage() {
                       {u.isActive ? "Faol" : "O'chirilgan"}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    {u.id !== me.id && (
+                      <Button size="sm" variant="ghost" icon="lock_reset" onClick={() => setResetting(u)}>
+                        Parolni tiklash
+                      </Button>
+                    )}
                     <Button size="sm" variant="ghost" icon="edit" onClick={() => setEditing(u)}>
                       Tahrirlash
                     </Button>
@@ -216,6 +283,7 @@ export default function UsersPage() {
         </Card>
       )}
       {editing !== undefined && <UserDialog user={editing} onClose={() => setEditing(undefined)} />}
+      {resetting && <ResetPasswordDialog user={resetting} onClose={() => setResetting(null)} />}
     </div>
   );
 }

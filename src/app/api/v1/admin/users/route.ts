@@ -3,6 +3,7 @@ import { badRequest, requirePermission, withUser } from "@/lib/api";
 import { hashPassword } from "@/lib/auth";
 import { userInput } from "@/lib/schemas";
 import { assertCanManageRole, assertUserWithinActor } from "@/lib/permission-guard";
+import { audit } from "@/lib/audit";
 
 export const GET = withUser(async ({ user }) => {
   requirePermission(user, "admin:users", "admin:permissions");
@@ -42,5 +43,6 @@ export const POST = withUser(async ({ req, user }) => {
       isActive: data.isActive,
     },
   });
+  await audit(user, { action: "user.create", entityType: "user", entityId: created.id, summary: `Foydalanuvchi yaratildi: ${data.fullName} (@${data.username}), rol ${data.role}` }, req);
   return { id: created.id };
 });

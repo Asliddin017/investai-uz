@@ -3,6 +3,7 @@ import { badRequest, notFound, requirePermission, withUser } from "@/lib/api";
 import { hashPassword } from "@/lib/auth";
 import { userInput } from "@/lib/schemas";
 import { assertCanManageRole, assertUserWithinActor } from "@/lib/permission-guard";
+import { audit } from "@/lib/audit";
 
 export const PUT = withUser<{ id: string }>(async ({ req, user, params }) => {
   requirePermission(user, "admin:users");
@@ -34,9 +35,10 @@ export const PUT = withUser<{ id: string }>(async ({ req, user, params }) => {
       departmentId: data.departmentId,
       isActive: data.isActive,
       ...(data.password
-        ? { passwordHash: await hashPassword(data.password), sessionVersion: { increment: 1 } }
+        ? { passwordHash: await hashPassword(data.password), sessionVersion: { increment: 1 }, mustChangePassword: true }
         : {}),
     },
   });
+  await audit(user, { action: "user.update", entityType: "user", entityId: target.id, summary: `Foydalanuvchi tahrirlandi: ${data.fullName} (@${data.username})${data.password ? ", parol almashtirildi" : ""}`, meta: { role: { from: target.role, to: data.role }, isActive: data.isActive } }, req);
   return { ok: true };
 });

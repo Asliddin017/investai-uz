@@ -4,6 +4,7 @@ import { badRequest, forbidden, requirePermission, withUser } from "@/lib/api";
 import { LOCKED_SUPER_ADMIN_PERMISSIONS, PERMISSION_KEYS, ROLES } from "@/lib/permissions";
 import { rolesMatrixInput } from "@/lib/schemas";
 import { assertActorKeepsPermissionAdmin, assertGrantsWithinActor } from "@/lib/permission-guard";
+import { audit } from "@/lib/audit";
 
 const ROLE_SET = new Set<string>(ROLES.map((r) => r.value));
 
@@ -46,5 +47,19 @@ export const PUT = withUser(async ({ req, user }) => {
     db.rolePermission.createMany({ data: perms.map((permission) => ({ role: role as Role, permission })) }),
   ]);
   await db.$transaction(writes);
+  const changes = Object.entries(normalized).map(([role, perms]) => {
+    const before = new Set(current.filter((c) => c.role === role).map((c) => c.permission));
+    return { role, added: perms.filter((p) => !before.has(p)), removed: [...before].filter((p) => !perms.includes(p)) };
+  });
+  await audit(
+    user,
+    {
+      action: "permissions.roles",
+      entityType: "role",
+      summary: changes.map((c) => `${c.role}: +${c.added.length} / −${c.removed.length}`).join("; "),
+      meta: changes,
+    },
+    req,
+  );
   return { ok: true };
 });

@@ -20,6 +20,8 @@ export function requirePermission(user: CurrentUser, ...anyOf: string[]) {
   if (!anyOf.some((p) => user.permissions.has(p))) throw forbidden();
 }
 
+const PASSWORD_CHANGE_PATHS = new Set(["/api/v1/profile/password", "/api/v1/auth/me", "/api/v1/profile"]);
+
 type Handler<P> = (ctx: { req: Request; user: CurrentUser; params: P }) => Promise<unknown>;
 
 /** Wraps a route handler: loads the session user, maps errors to JSON responses. */
@@ -28,6 +30,10 @@ export function withUser<P = Record<string, string>>(handler: Handler<P>) {
     try {
       const user = await getCurrentUser();
       if (!user) throw unauthorized();
+      // After an administrator reset, nothing but choosing a new password is allowed.
+      if (user.mustChangePassword && !PASSWORD_CHANGE_PATHS.has(new URL(req.url).pathname)) {
+        throw forbidden("Avval yangi parol qo'ying");
+      }
       const result = await handler({ req, user, params: await ctx.params });
       if (result instanceof Response) return result;
       return NextResponse.json(result ?? { ok: true });

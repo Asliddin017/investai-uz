@@ -7,7 +7,7 @@ import { api, cn } from "@/lib/client";
 import { useSession } from "./providers";
 import { MSIcon } from "./ui";
 import { usePendingNameRequests } from "./name-requests-panel";
-import { useReportReminders } from "./report-reminders";
+import { useMyTasks } from "./my-tasks";
 
 type NavItem = { href: string; label: string; icon: string; perm: string | string[] };
 
@@ -17,6 +17,7 @@ const NAV: { section?: string; items: NavItem[] }[] = [
       { href: "/dashboard", label: "Dashboard", icon: "space_dashboard", perm: "nav:dashboard" },
       { href: "/plans", label: "Rejalar", icon: "flight_takeoff", perm: "nav:plans" },
       { href: "/agreements", label: "Kelishuvlar", icon: "handshake", perm: "nav:agreements" },
+      { href: "/help", label: "Yordam", icon: "help", perm: [] },
     ],
   },
   {
@@ -25,6 +26,7 @@ const NAV: { section?: string; items: NavItem[] }[] = [
       { href: "/admin/users", label: "Foydalanuvchilar", icon: "group", perm: "admin:users" },
       { href: "/admin/departments", label: "Tashkilotlar", icon: "apartment", perm: "admin:departments" },
       { href: "/admin/permissions", label: "Ruxsatlar", icon: "admin_panel_settings", perm: "admin:permissions" },
+      { href: "/admin/audit", label: "Amallar jurnali", icon: "history", perm: "admin:audit" },
     ],
   },
 ];
@@ -36,10 +38,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
 
   const pendingNames = usePendingNameRequests(can("admin:users")).data?.length ?? 0;
-  const reportRequests = useReportReminders(can("plan:report")).data?.length ?? 0;
-  const badges: Record<string, number> = { "/admin/users": pendingNames, "/plans": reportRequests };
+  const taskCount = useMyTasks().data?.length ?? 0;
+  const badges: Record<string, number> = { "/admin/users": pendingNames, "/dashboard": taskCount };
 
-  const allowed = (perm: NavItem["perm"]) => (Array.isArray(perm) ? perm.some(can) : can(perm));
+  // An empty list means the item is open to everyone.
+  const allowed = (perm: NavItem["perm"]) => (Array.isArray(perm) ? perm.length === 0 || perm.some(can) : can(perm));
 
   async function logout() {
     await api("/auth/logout", { method: "POST" }).catch(() => undefined);

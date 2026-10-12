@@ -3,6 +3,7 @@ import { forbidden, withUser } from "@/lib/api";
 import { canApprovePlan } from "@/lib/plans";
 import { rejectInput } from "@/lib/schemas";
 import { loadPlanForUser } from "@/lib/serialize";
+import { audit } from "@/lib/audit";
 
 /** Rejection returns the plan to its author for correction and resubmission. */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
@@ -16,5 +17,6 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
     }),
     db.plan.update({ where: { id: plan.id }, data: { status: "REJECTED", rejectionReason: comment } }),
   ]);
+  await audit(user, { action: "plan.reject", entityType: "plan", entityId: plan.id, summary: `«${plan.title}» rad etildi: ${comment}` }, req);
   return { ok: true };
 });

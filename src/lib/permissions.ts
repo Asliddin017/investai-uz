@@ -40,6 +40,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: "admin:users", label_uz: "Foydalanuvchilarni boshqarish", category: "admin" },
   { key: "admin:departments", label_uz: "Tashkilotlarni boshqarish", category: "admin" },
   { key: "admin:permissions", label_uz: "Ruxsatlarni boshqarish", category: "admin" },
+  { key: "admin:audit", label_uz: "Amallar jurnalini ko'rish", category: "admin" },
 ];
 
 export const PERMISSION_KEYS = new Set(PERMISSIONS.map((p) => p.key));

@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { SessionProvider } from "@/components/providers";
 import { AppShell } from "@/components/app-shell";
+import { ForcePasswordChange } from "@/components/force-password-change";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         permissions: [...user.permissions],
       }}
     >
-      <AppShell>{children}</AppShell>
+      {user.mustChangePassword ? <ForcePasswordChange /> : <AppShell>{children}</AppShell>}
     </SessionProvider>
   );
 }

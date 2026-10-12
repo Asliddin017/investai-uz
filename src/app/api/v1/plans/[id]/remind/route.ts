@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { badRequest, forbidden, withUser } from "@/lib/api";
 import { canRemindReport } from "@/lib/plans";
 import { loadPlanForUser } from "@/lib/serialize";
+import { audit } from "@/lib/audit";
 
 const remindInput = z.object({ message: z.string().trim().max(500).optional().nullable() });
 const REPEAT_AFTER_MS = 24 * 60 * 60 * 1000;
@@ -18,5 +19,6 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
     throw badRequest("Hisobot so'nggi 24 soat ichida so'ralgan");
   }
   await db.reportReminder.create({ data: { planId: plan.id, requestedById: user.id, message: message || null } });
+  await audit(user, { action: "plan.remind", entityType: "plan", entityId: plan.id, summary: `«${plan.title}» hisoboti so'raldi` }, req);
   return { ok: true };
 });

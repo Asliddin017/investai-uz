@@ -92,10 +92,10 @@ r = await approver(`/plans/${planId}/remind`, { method: "POST", json: { message:
 check("kotibiyat hisobotni so'raydi", r.status === 200, JSON.stringify(r.data));
 r = await approver(`/plans/${planId}/remind`, { method: "POST", json: {} });
 check("24 soat ichida qayta so'rab bo'lmaydi", r.status === 400, r.status);
-r = await author("/reminders");
-check("muallif eslatmani ko'radi", r.data.some((x) => x.planId === planId && x.message === "Juma kunigacha yakunlang"));
-r = await tuman("/reminders");
-check("boshqa tashkilot eslatmani ko'rmaydi", !r.data.some((x) => x.planId === planId));
+r = await author("/tasks");
+check("muallif vazifalarida hisobot so'rovi bor", r.data.some((t) => t.id === `results-${planId}` && t.urgent));
+r = await tuman("/tasks");
+check("boshqa tashkilot vazifalarida bu reja yo'q", !r.data.some((t) => t.href === `/plans/${planId}`));
 
 // 6. Results
 r = await author(`/plans/${planId}`);
@@ -134,8 +134,8 @@ r = await author(`/plans/${planId}/report`, { method: "POST" });
 check("hisobot yakunlandi + AI tahlil", r.status === 200 && typeof r.data.score === "number", `score=${r.data.score}`);
 r = await author(`/plans/${planId}`);
 check("holat REPORTED, tahlil saqlangan", r.data.status === "REPORTED" && r.data.analyses.length === 1);
-r = await author("/reminders");
-check("hisobot yakunlangach eslatma yopiladi", !r.data.some((x) => x.planId === planId));
+r = await author("/tasks");
+check("hisobot yakunlangach vazifa yo'qoladi", !r.data.some((t) => t.href === `/plans/${planId}`));
 
 // 9. Close agreement → plan completed
 r = await approver(`/agreements/${agreementId}/status`, { method: "POST", json: { status: "COMPLETED" } });
@@ -257,10 +257,8 @@ r = await tuman("/profile", { method: "PUT", json: { position: "Tuman hokimi", t
 r = await admin("/admin/users");
 check("profil orqali rol o'zgarmaydi", r.data.find((u) => u.username === "tuman").role === "TUMAN_HOKIMI");
 const staleTuman = await login("tuman");
-r = await tuman("/profile/password", { method: "PUT", json: { currentPassword: "noto'g'ri", newPassword: "YangiParol123" } });
-check("noto'g'ri joriy parol bilan parol o'zgarmaydi", r.status === 400, r.status);
-r = await tuman("/profile/password", { method: "PUT", json: { currentPassword: PASSWORD, newPassword: "YangiParol123" } });
-check("parol o'zgaradi", r.status === 200, JSON.stringify(r.data));
+r = await tuman("/profile/password", { method: "PUT", json: { newPassword: "YangiParol123" } });
+check("parol joriy parolsiz o'zgaradi", r.status === 200, JSON.stringify(r.data));
 const relog = await fetch(`${BASE}/api/v1/auth/login`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
@@ -274,17 +272,67 @@ check("parol almashgach boshqa sessiyalar bekor bo'ladi", r.status === 401, r.st
 r = await tuman("/profile", { method: "PUT", json: { fullName: "Karimov Akmal", position: "Tuman hokimi", theme: "LIGHT" } });
 r = await admin("/admin/users");
 check("xodim o'z ismini o'zgartira olmaydi", r.data.find((u) => u.username === "tuman").fullName === "Yusupov Bekzod");
-await tuman("/profile/password", { method: "PUT", json: { currentPassword: "YangiParol123", newPassword: PASSWORD } });
+await tuman("/profile/password", { method: "PUT", json: { newPassword: PASSWORD } });
+
+// 12b. Admin renames themselves directly; forgotten password → one-time password
+r = await admin("/profile", { method: "PUT", json: { fullName: "Tizim administratori Bosh", theme: "LIGHT" } });
+r = await admin("/profile");
+check("admin o'z ismini so'rovsiz o'zgartiradi", r.data.fullName === "Tizim administratori Bosh", r.data.fullName);
+await admin("/profile", { method: "PUT", json: { fullName: "Tizim administratori", theme: "LIGHT" } });
+
+r = await admin(`/admin/users/${tumanUser.id}/reset-password`, { method: "POST" });
+check("admin vaqtinchalik parol beradi", r.status === 200 && typeof r.data.password === "string" && r.data.password.length >= 12);
+const tempPassword = r.data.password;
+r = await tuman("/profile");
+check("tiklashdan keyin eski sessiya yopiladi", r.status === 401, r.status);
+const tumanTemp = await (async () => {
+  const res = await fetch(`${BASE}/api/v1/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "tuman", password: tempPassword }),
+  });
+  check("vaqtinchalik parol bilan kiradi", res.status === 200, res.status);
+  const cookie = res.headers.get("set-cookie").split(";")[0];
+  let c = cookie;
+  return async (path, opts = {}) => {
+    const rr = await fetch(`${BASE}/api/v1${path}`, {
+      method: opts.method ?? "GET",
+      headers: { cookie: c, ...(opts.json ? { "Content-Type": "application/json" } : {}) },
+      body: opts.json ? JSON.stringify(opts.json) : undefined,
+    });
+    const fresh = rr.headers.getSetCookie().find((x) => x.startsWith("investai_session="));
+    if (fresh) c = fresh.split(";")[0];
+    return { status: rr.status, data: await rr.json().catch(() => null) };
+  };
+})();
+r = await tumanTemp("/plans");
+check("yangi parol qo'yilmaguncha boshqa ish qilib bo'lmaydi", r.status === 403, r.status);
+r = await tumanTemp("/profile/password", { method: "PUT", json: { newPassword: PASSWORD } });
+check("majburiy parol almashtiriladi", r.status === 200, r.status);
+r = await tumanTemp("/plans");
+check("parol almashgach ishlash mumkin", r.status === 200, r.status);
+r = await approver(`/admin/users/${tumanUser.id}/reset-password`, { method: "POST" });
+check("admin:users huquqisiz parol tiklab bo'lmaydi", r.status === 403, r.status);
+
+// 12c. Audit log
+r = await admin("/admin/audit?action=user.password_reset");
+check("jurnalda parol tiklash yozilgan", r.status === 200 && r.data.items.some((i) => i.summary.includes("@tuman")));
+check("jurnalda parolning o'zi yo'q", !JSON.stringify(r.data).includes(tempPassword));
+r = await admin("/admin/audit?action=auth.login_failed");
+check("muvaffaqiyatsiz kirishlar ham yoziladi", r.status === 200);
+r = await approver("/admin/audit");
+check("jurnalni faqat admin:audit egasi ko'radi", r.status === 403, r.status);
 
 // 13. Name change goes through a request
+const tumanAgain = await login("tuman");
 const observer = await login("kuzatuvchi");
 const kuzatuvchiLike = (newName) => observer("/profile/name-requests", { method: "POST", json: { newName } });
-r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Yusupov Bekzod Akmalovich", reason: "Pasport" } });
+r = await tumanAgain("/profile/name-requests", { method: "POST", json: { newName: "Yusupov Bekzod Akmalovich", reason: "Pasport" } });
 check("xodim ism so'rovi yuboradi", r.status === 200, JSON.stringify(r.data));
 const nameReqId = r.data.id;
-r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Boshqa Ism" } });
+r = await tumanAgain("/profile/name-requests", { method: "POST", json: { newName: "Boshqa Ism" } });
 check("bir vaqtda ikkita ochiq so'rov bo'lmaydi", r.status === 400, r.status);
-r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Кarimov Akmal" } });
+r = await tumanAgain("/profile/name-requests", { method: "POST", json: { newName: "Кarimov Akmal" } });
 check("aralash alifboli ism qabul qilinmaydi", r.status === 400, r.status);
 await admin(`/admin/permissions/users/${approverUser.id}`, {
   method: "PUT",
@@ -297,15 +345,15 @@ r = await kuzatuvchiLike("Karimov  Akmal");
 check("boshqa xodimning ismiga so'rov yuborib bo'lmaydi", r.status === 400, r.status);
 r = await kuzatuvchiLike("КАРИМОВ АКМАЛ");
 check("kirilldagi bir xil ismga ham so'rov yuborib bo'lmaydi", r.status === 400, r.status);
-r = await tuman(`/admin/name-requests/${nameReqId}/approve`, { method: "POST", json: {} });
+r = await tumanAgain(`/admin/name-requests/${nameReqId}/approve`, { method: "POST", json: {} });
 check("xodim o'z so'rovini tasdiqlay olmaydi", r.status === 403, r.status);
 r = await admin(`/admin/name-requests/${nameReqId}/approve`, { method: "POST", json: {} });
 check("admin so'rovni tasdiqlaydi", r.status === 200, JSON.stringify(r.data));
-r = await tuman("/profile");
+r = await tumanAgain("/profile");
 check("ism tasdiqdan keyin o'zgaradi", r.data.fullName === "Yusupov Bekzod Akmalovich", r.data.fullName);
 r = await admin(`/admin/name-requests/${nameReqId}/approve`, { method: "POST", json: {} });
 check("so'rov ikki marta tasdiqlanmaydi", r.status === 400, r.status);
-r = await tuman("/profile/name-requests", { method: "POST", json: { newName: "Yusupov Bekzod" } });
+r = await tumanAgain("/profile/name-requests", { method: "POST", json: { newName: "Yusupov Bekzod" } });
 r = await admin(`/admin/name-requests/${r.data.id}/reject`, { method: "POST", json: { comment: "Asl ism qaytarilmasin" } });
 check("admin so'rovni rad etadi", r.status === 200);
 await admin(`/admin/users/${tumanUser.id}`, {

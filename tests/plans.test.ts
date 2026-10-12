@@ -12,6 +12,7 @@ function user(perms: string[], over: Partial<CurrentUser> = {}): CurrentUser {
     departmentId: "d1",
     departmentName: "Boshqarma",
     theme: "LIGHT",
+    mustChangePassword: false,
     permissions: new Set(perms),
     ...over,
   };

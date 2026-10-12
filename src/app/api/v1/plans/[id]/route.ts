@@ -4,6 +4,7 @@ import { canEditPlan } from "@/lib/plans";
 import { planInput } from "@/lib/schemas";
 import { loadPlanForUser, serializePlan } from "@/lib/serialize";
 import { deleteFile } from "@/lib/storage";
+import { audit } from "@/lib/audit";
 
 type Params = { id: string };
 
@@ -41,10 +42,11 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
       },
     }),
   ]);
+  await audit(user, { action: "plan.update", entityType: "plan", entityId: plan.id, summary: `Reja tahrirlandi: «${data.title}»` }, req);
   return { id: plan.id };
 });
 
-export const DELETE = withUser<Params>(async ({ user, params }) => {
+export const DELETE = withUser<Params>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
   if (!canEditPlan(user, plan) || plan.status !== "DRAFT") {
     throw badRequest("Faqat yuborilmagan qoralamani o'chirish mumkin");
@@ -52,5 +54,6 @@ export const DELETE = withUser<Params>(async ({ user, params }) => {
   const attachments = await db.attachment.findMany({ where: { agreement: { planId: plan.id } } });
   await db.plan.delete({ where: { id: plan.id } });
   await Promise.all(attachments.map((a) => deleteFile(a.url)));
+  await audit(user, { action: "plan.delete", entityType: "plan", entityId: plan.id, summary: `Qoralama o'chirildi: «${plan.title}»` }, req);
   return { ok: true };
 });

@@ -4,6 +4,7 @@ import { requirePermission, withUser } from "@/lib/api";
 import { planVisibilityWhere } from "@/lib/plans";
 import { planInput } from "@/lib/schemas";
 import { PLAN_STATUS_LABELS } from "@/lib/labels";
+import { audit } from "@/lib/audit";
 
 export const GET = withUser(async ({ req, user }) => {
   requirePermission(user, "nav:plans");
@@ -69,5 +70,6 @@ export const POST = withUser(async ({ req, user }) => {
       },
     },
   });
+  await audit(user, { action: "plan.create", entityType: "plan", entityId: plan.id, summary: `Reja yaratildi: «${plan.title}»` }, req);
   return { id: plan.id };
 });

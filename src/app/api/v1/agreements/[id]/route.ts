@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { badRequest, forbidden, withUser } from "@/lib/api";
 import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
 import { agreementInput } from "@/lib/schemas";
+import { audit } from "@/lib/audit";
 
 type Params = { id: string };
 
@@ -34,5 +35,6 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
       description: data.description,
     },
   });
+  await audit(user, { action: "agreement.update", entityType: "agreement", entityId: agreement.id, summary: `Kelishuv tahrirlandi: «${data.title}»`, meta: { deadline: { from: agreement.deadline.toISOString().slice(0, 10), to: data.deadline } } }, req);
   return { ok: true };
 });

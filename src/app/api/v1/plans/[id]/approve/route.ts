@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { forbidden, withUser } from "@/lib/api";
 import { canApprovePlan } from "@/lib/plans";
 import { loadPlanForUser } from "@/lib/serialize";
+import { audit } from "@/lib/audit";
 
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
@@ -18,5 +19,6 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
       data: { status: "APPROVED", approvedAt: new Date(), approvedById: user.id },
     }),
   ]);
+  await audit(user, { action: "plan.approve", entityType: "plan", entityId: plan.id, summary: `«${plan.title}» tasdiqlandi (v${plan.version})` }, req);
   return { ok: true };
 });

@@ -137,19 +137,15 @@ export const rolesMatrixInput = z.object({
 });
 
 export const profileInput = z.object({
+  /** Applied only for users who manage accounts (admin:users); everyone else sends a request. */
+  fullName: personName.optional(),
   position: optionalText,
   theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
 });
 
-export const passwordChangeInput = z
-  .object({
-    currentPassword: z.string().min(1, "Joriy parolni kiriting"),
-    newPassword: z.string().min(8, "Yangi parol kamida 8 belgi bo'lsin").max(128),
-  })
-  .refine((v) => v.newPassword !== v.currentPassword, {
-    message: "Yangi parol joriy paroldan farq qilsin",
-    path: ["newPassword"],
-  });
+export const passwordChangeInput = z.object({
+  newPassword: z.string().min(8, "Yangi parol kamida 8 belgi bo'lsin").max(128),
+});
 
 export const nameRequestInput = z.object({
   newName: personName,

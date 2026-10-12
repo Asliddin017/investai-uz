@@ -3,9 +3,10 @@ import { db } from "@/lib/db";
 import { badRequest, forbidden, withUser } from "@/lib/api";
 import { canEditPlan, snapshotPlan } from "@/lib/plans";
 import { loadPlanForUser } from "@/lib/serialize";
+import { audit } from "@/lib/audit";
 
 /** Sends a draft (or a corrected rejected plan) for approval and freezes this version in history. */
-export const POST = withUser<{ id: string }>(async ({ user, params }) => {
+export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
   if (!canEditPlan(user, plan)) throw forbidden("Bu rejani tasdiqqa yuborib bo'lmaydi");
   if (plan.items.length === 0) throw badRequest("Yo'l xaritasida kamida bitta band bo'lsin");
@@ -26,5 +27,6 @@ export const POST = withUser<{ id: string }>(async ({ user, params }) => {
       data: { status: "PENDING", version, submittedAt: new Date(), rejectionReason: null },
     }),
   ]);
+  await audit(user, { action: "plan.submit", entityType: "plan", entityId: plan.id, summary: `«${plan.title}» tasdiqqa yuborildi (v${version})` }, req);
   return { ok: true };
 });

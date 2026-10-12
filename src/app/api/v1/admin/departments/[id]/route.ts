@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { badRequest, notFound, requirePermission, withUser } from "@/lib/api";
 import { departmentInput } from "@/lib/schemas";
+import { audit } from "@/lib/audit";
 
 type Params = { id: string };
 
@@ -10,10 +11,11 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
   const existing = await db.department.findUnique({ where: { name: data.name } });
   if (existing && existing.id !== params.id) throw badRequest("Bu nomdagi tashkilot mavjud");
   await db.department.update({ where: { id: params.id }, data });
+  await audit(user, { action: "department.update", entityType: "department", entityId: params.id, summary: `Tashkilot tahrirlandi: ${data.name}` }, req);
   return { ok: true };
 });
 
-export const DELETE = withUser<Params>(async ({ user, params }) => {
+export const DELETE = withUser<Params>(async ({ req, user, params }) => {
   requirePermission(user, "admin:departments");
   const dept = await db.department.findUnique({
     where: { id: params.id },
@@ -24,5 +26,6 @@ export const DELETE = withUser<Params>(async ({ user, params }) => {
     throw badRequest("Xodimlari yoki rejalari bor tashkilotni o'chirib bo'lmaydi");
   }
   await db.department.delete({ where: { id: dept.id } });
+  await audit(user, { action: "department.delete", entityType: "department", entityId: dept.id, summary: `Tashkilot o'chirildi: ${dept.name}` }, req);
   return { ok: true };
 });

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { forbidden, notFound, withUser } from "@/lib/api";
 import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
 import { deleteFile, readFile } from "@/lib/storage";
+import { audit } from "@/lib/audit";
 
 type Params = { id: string };
 
@@ -32,11 +33,12 @@ export const GET = withUser<Params>(async ({ user, params }) => {
   });
 });
 
-export const DELETE = withUser<Params>(async ({ user, params }) => {
+export const DELETE = withUser<Params>(async ({ req, user, params }) => {
   const attachment = await loadAttachment(params.id);
   const agreement = await loadAgreementForUser(user, attachment.agreementId);
   if (!serializeAgreement(user, agreement).can.attach) throw forbidden("Faylni o'chirishga ruxsat yo'q");
   await db.attachment.delete({ where: { id: attachment.id } });
   await deleteFile(attachment.url);
+  await audit(user, { action: "attachment.delete", entityType: "agreement", entityId: agreement.id, summary: `«${agreement.title}»dan hujjat o'chirildi: ${attachment.fileName}` }, req);
   return { ok: true };
 });

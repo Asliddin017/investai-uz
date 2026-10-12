@@ -23,6 +23,22 @@ Diagramma: [`docs/diagrams/umumiy.png`](docs/diagrams/umumiy.png).
 | O'rinbosar, boshqarma boshlig'i, tuman/shahar hokimi | reja tuzish, natija va kelishuv kiritish, o'z tashkiloti rejalarini ko'rish |
 | Kuzatuvchi | barcha rejalarni faqat ko'rish |
 
+## Parolni tiklash
+
+- **Oddiy xodim parolini unutsa:** administrator → Foydalanuvchilar → «Parolni tiklash». Tizim vaqtinchalik parolni bir marta ko'rsatadi; xodim kirgach o'z parolini qo'yadi. Parollar faqat shifrlangan (bcrypt) saqlanadi — hech kim, jumladan admin ham, ularni ko'ra olmaydi.
+- **Yagona admin parolini unutsa:** ma'lumotlar bazasiga ulanish bor kompyuterda:
+
+```bash
+npm run user:reset-password -- admin                     # lokal baza (.env)
+set -a; . ./.env.vercel; set +a; npm run user:reset-password -- admin   # production
+```
+
+Buyruq vaqtinchalik parolni chiqaradi va bu amal jurnalga yoziladi.
+
+## Amallar jurnali
+
+`/admin/audit` (`admin:audit` huquqi, standart: Super Admin) — kirishlar, rejalar, tasdiqlar, kelishuvlar, hujjatlar, foydalanuvchilar, parol va ruxsat o'zgarishlari: kim, qachon, qaysi IP'dan.
+
 ## Texnologiyalar
 
 Next.js 15 (App Router, API routes) · TypeScript · Tailwind CSS 4 · Prisma + PostgreSQL · TanStack Query · Claude API (`@anthropic-ai/sdk`) · Vercel Blob (yopiq fayllar).

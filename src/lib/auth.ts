@@ -78,6 +78,7 @@ export type CurrentUser = {
   departmentId: string | null;
   departmentName: string | null;
   theme: Theme;
+  mustChangePassword: boolean;
   permissions: Set<string>;
 };
 
@@ -106,6 +107,7 @@ export async function loadUserWithPermissions(
     departmentId: user.departmentId,
     departmentName: user.department?.name ?? null,
     theme: user.theme,
+    mustChangePassword: user.mustChangePassword,
     permissions,
   };
 }
@@ -116,4 +118,12 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   const session = await readSessionToken(token);
   if (!session) return null;
   return loadUserWithPermissions(session.userId, session.sessionVersion);
+}
+
+const TEMP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+
+/** A readable one-time password (no 0/O, 1/l/I) for an administrator to hand over. */
+export function generateTempPassword(length = 12) {
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(bytes, (b) => TEMP_ALPHABET[b % TEMP_ALPHABET.length]).join("");
 }

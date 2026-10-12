@@ -1,8 +1,10 @@
 import { db } from "@/lib/db";
 import { withUser } from "@/lib/api";
+import { assertNameNotTaken } from "@/lib/name-requests";
 import { setThemeCookie } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { profileInput } from "@/lib/schemas";
+import { audit } from "@/lib/audit";
 
 /**
  * Every signed-in user edits their own position and theme. The full name is what approval history
@@ -32,14 +34,21 @@ export const GET = withUser(async ({ user }) => ({
   roleLabel: ROLE_LABELS[user.role],
   departmentName: user.departmentName,
   theme: user.theme,
+  canRenameSelf: user.permissions.has("admin:users"),
+  mustChangePassword: user.mustChangePassword,
 }));
 
 export const PUT = withUser(async ({ req, user }) => {
   const data = profileInput.parse(await req.json());
+  // An administrator would only be approving their own request, so they rename themselves directly.
+  const rename =
+    data.fullName && data.fullName !== user.fullName && user.permissions.has("admin:users") ? data.fullName : null;
+  if (rename) await assertNameNotTaken(db, user.id, rename);
   await db.user.update({
     where: { id: user.id },
-    data: { position: data.position, theme: data.theme },
+    data: { position: data.position, theme: data.theme, ...(rename ? { fullName: rename } : {}) },
   });
+  await audit(user, { action: "profile.update", entityType: "user", entityId: user.id, summary: `${rename ? `Ism: ${user.fullName} → ${rename}; ` : ""}Lavozim: ${data.position ?? "—"}, rejim: ${data.theme}` }, req);
   await setThemeCookie(data.theme);
   return { ok: true };
 });

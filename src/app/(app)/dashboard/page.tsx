@@ -6,7 +6,7 @@ import { api, cn, daysUntil, formatDate } from "@/lib/client";
 import type { PlanStatus } from "@/lib/types";
 import { useSession } from "@/components/providers";
 import { PLAN_STATUS_OPTIONS } from "@/components/status";
-import { ReportRemindersCard } from "@/components/report-reminders";
+import { MyTasks } from "@/components/my-tasks";
 import { Card, CardHeader, EmptyState, ErrorBox, MSIcon, PageHeader, ProgressBar, Spinner } from "@/components/ui";
 
 type Dashboard = {
@@ -103,7 +103,7 @@ function ResultsBar({ achieved, failed, pending }: { achieved: number; failed: n
 }
 
 export default function DashboardPage() {
-  const { user, can } = useSession();
+  const { user } = useSession();
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => api<Dashboard>("/dashboard"),
@@ -119,6 +119,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={`Assalomu alaykum, ${user.fullName}`} description="Investitsiya safarlari bo'yicha umumiy holat" />
+
+      <MyTasks />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatTile label="Jami rejalar" value={plansTotal} icon="flight_takeoff" href="/plans" />
@@ -145,36 +147,6 @@ export default function DashboardPage() {
           hint="reja va natija mosligi"
         />
       </div>
-
-      {can("plan:report") && <ReportRemindersCard />}
-
-      {can("plan:approve") && data.pendingApprovals.length > 0 && (
-        <Card>
-          <CardHeader
-            title="Tasdiqlashni kutayotgan rejalar"
-            icon="pending_actions"
-            description="Tasdiqlang yoki sababini yozib tuzuvchiga qaytaring"
-          />
-          <ul className="divide-y">
-            {data.pendingApprovals.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
-                <div>
-                  <Link href={`/plans/${p.id}`} className="font-medium hover:text-primary hover:underline">
-                    {p.title}
-                  </Link>
-                  <div className="text-xs text-muted-foreground">
-                    {p.creator.fullName} · {p.country} · yuborildi {formatDate(p.submittedAt)}
-                    {p.version > 1 && ` · ${p.version}-variant (qayta yuborilgan)`}
-                  </div>
-                </div>
-                <Link href={`/plans/${p.id}`} className="text-sm font-medium text-primary hover:underline">
-                  Ko&apos;rib chiqish →
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

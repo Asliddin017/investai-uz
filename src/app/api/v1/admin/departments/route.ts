@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { badRequest, requirePermission, withUser } from "@/lib/api";
 import { departmentInput } from "@/lib/schemas";
+import { audit } from "@/lib/audit";
 
 export const GET = withUser(async ({ user }) => {
   requirePermission(user, "admin:departments", "admin:permissions", "admin:users");
@@ -17,5 +18,6 @@ export const POST = withUser(async ({ req, user }) => {
     throw badRequest("Bu nomdagi tashkilot mavjud");
   }
   const created = await db.department.create({ data });
+  await audit(user, { action: "department.create", entityType: "department", entityId: created.id, summary: `Tashkilot qo'shildi: ${data.name}` }, req);
   return { id: created.id };
 });

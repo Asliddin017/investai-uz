@@ -3,6 +3,7 @@ import { badRequest, forbidden, withUser } from "@/lib/api";
 import { canManageAgreements } from "@/lib/plans";
 import { agreementInput } from "@/lib/schemas";
 import { loadPlanForUser } from "@/lib/serialize";
+import { audit } from "@/lib/audit";
 
 /** Adds an agreement reached on the trip; planItemId empty = an achievement outside the plan. */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
@@ -30,5 +31,6 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
       createdById: user.id,
     },
   });
+  await audit(user, { action: "agreement.create", entityType: "agreement", entityId: agreement.id, summary: `Kelishuv qo'shildi: «${agreement.title}» (${agreement.partner}), muddat ${data.deadline}` }, req);
   return { id: agreement.id };
 });

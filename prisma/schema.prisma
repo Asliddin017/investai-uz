@@ -100,6 +100,8 @@ model User {
   theme        Theme     @default(LIGHT)
   /// Bumped on password change or reset; tokens carrying an older value are rejected.
   sessionVersion Int     @default(0)
+  /// Set after an administrator reset: the user must choose a new password before anything else.
+  mustChangePassword Boolean @default(false)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
 
@@ -114,6 +116,7 @@ model User {
   attachments      Attachment[]
   analyses         AiAnalysis[]
   reportReminders  ReportReminder[]
+  auditLogs        AuditLog[]
   nameRequests     NameChangeRequest[] @relation("NameRequester")
   reviewedRequests NameChangeRequest[] @relation("NameReviewer")
 }
@@ -339,4 +342,25 @@ model ReportReminder {
   requestedBy User @relation(fields: [requestedById], references: [id])
 
   @@index([planId, resolvedAt])
+}
+
+/// Append-only record of who did what and when.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorLabel String
+  action     String
+  entityType String?
+  entityId   String?
+  summary    String
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action])
 }

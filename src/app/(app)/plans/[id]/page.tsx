@@ -8,6 +8,7 @@ import { api, cn, daysUntil, formatDate, formatDateTime, formatMoney } from "@/l
 import type { ItemResult, PlanDetail, PlanItem, PlanStatus } from "@/lib/types";
 import { useToast } from "@/components/providers";
 import { AgreementFormDialog } from "@/components/agreement-form";
+import { NextStep } from "@/components/next-step";
 import { AgreementStatusBadge, documentTypeLabel, ItemResultLabel, PlanStatusBadge } from "@/components/status";
 import {
   Button,
@@ -637,7 +638,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
                 Hisobotni so&apos;rash
               </Button>
             )}
-            {plan.can.report && (
+            {plan.can.report && pendingResults === 0 && (
               <Button
                 icon="fact_check"
                 loading={action.isPending}
@@ -658,15 +659,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
         <Stepper status={plan.status} />
       </div>
 
-      {plan.status === "REJECTED" && plan.rejectionReason && (
-        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
-          <MSIcon name="undo" className="text-destructive" />
-          <div>
-            <div className="font-medium text-destructive">Reja rad etildi va qayta tahrirlashga qaytarildi</div>
-            <div className="mt-0.5">{plan.rejectionReason}</div>
-          </div>
-        </div>
-      )}
+      <NextStep plan={plan} />
       {plan.status === "APPROVED" && plan.reminders[0] && (
         <div className="flex items-start gap-2 rounded-md border border-amber-400/50 bg-amber-500/10 px-4 py-3 text-sm">
           <MSIcon name="notifications_active" className="text-amber-600" />
@@ -676,19 +669,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
               <span className="font-normal text-muted-foreground">{formatDateTime(plan.reminders[0].createdAt)}</span>
             </div>
             {plan.reminders[0].message && <div className="mt-0.5">{plan.reminders[0].message}</div>}
-            {plan.can.report && (
-              <div className="mt-0.5 text-muted-foreground">
-                Har bir band natijasini kiriting va «Hisobotni yakunlash» tugmasini bosing — AI tahlil shundan keyin tayyor bo&apos;ladi.
-              </div>
-            )}
           </div>
-        </div>
-      )}
-      {plan.can.report && pendingResults > 0 && (
-        <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary-soft px-4 py-3 text-sm">
-          <MSIcon name="info" className="text-primary" />
-          Safar natijalarini kiriting: {pendingResults} ta band bo&apos;yicha natija kutilmoqda. Barcha bandlar to&apos;ldirilgach
-          «Hisobotni yakunlash» tugmasini bosing.
         </div>
       )}
 
