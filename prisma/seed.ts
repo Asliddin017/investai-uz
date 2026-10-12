@@ -28,10 +28,16 @@ const day = 24 * 60 * 60 * 1000;
 const daysFromNow = (n: number) => new Date(Date.now() + n * day);
 
 async function seedPermissions() {
+  // Migrations that add a permission also insert it for some roles, so on a fresh install a
+  // role can already have a few rows. With no users yet nothing was customized: fill in all defaults.
+  const freshInstall = (await db.user.count()) === 0;
   for (const [role, perms] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
     const existing = await db.rolePermission.count({ where: { role: role as Role } });
-    if (existing === 0) {
-      await db.rolePermission.createMany({ data: perms.map((permission) => ({ role: role as Role, permission })) });
+    if (freshInstall || existing === 0) {
+      await db.rolePermission.createMany({
+        data: perms.map((permission) => ({ role: role as Role, permission })),
+        skipDuplicates: true,
+      });
     }
   }
 }
