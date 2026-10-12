@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidName, nameKey, normalizeName } from "@/lib/names";
+import { isValidName, nameKey, namesCollide, normalizeName } from "@/lib/names";
 
 describe("names", () => {
   it("normalizes spacing and invisible format characters", () => {
@@ -31,5 +31,14 @@ describe("names", () => {
     for (const v of ["karimov  akmal", "KARIMOV AKMAL", "Каримов Акмал"]) expect(nameKey(v)).toBe(k);
     expect(nameKey("G'ulomov")).toBe(nameKey("Gʻulomov"));
     expect(nameKey("Karimov Akmal")).not.toBe(nameKey("Karimov Akbar"));
+  });
+
+  it("catches an all-Cyrillic name that only looks like a Latin one", () => {
+    expect(isValidName("НОРА")).toBe(true);
+    expect(namesCollide("HOPA", "НОРА")).toBe(true);
+    expect(namesCollide("Mexmonov Axmet", "МЕХМОНОВ АХМЕТ")).toBe(true); // same name, read aloud
+    expect(namesCollide("Hopa", "Нодира")).toBe(false);
+    expect(namesCollide("Karimov Akmal", "Каримов Акмал")).toBe(true);
+    expect(namesCollide("Karimov Akmal", "Karimov Akbar")).toBe(false);
   });
 });
