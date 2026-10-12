@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api, toDateInput } from "@/lib/client";
 import type { AgreementDetail, PlanItem } from "@/lib/types";
+import { AmountInput } from "./amount-input";
 import { DOCUMENT_TYPES } from "./status";
 import { Button, Dialog, Field, Input, MSIcon, Select, Textarea } from "./ui";
 
@@ -116,7 +117,7 @@ export function AgreementFormDialog({ open, onClose, onSaved, planId, items, agr
           <Input type="date" value={form.deadline} onChange={set("deadline")} />
         </Field>
         <Field label="Summa">
-          <Input type="number" min="0" step="any" value={form.amount} onChange={set("amount")} />
+          <AmountInput value={form.amount} onChange={(amount) => setForm((f) => ({ ...f, amount }))} />
         </Field>
         <Field label="Valyuta">
           <Select value={form.currency} onChange={set("currency")}>
