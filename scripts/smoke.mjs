@@ -259,6 +259,10 @@ r = await staleTuman("/profile");
 check("parol almashgach boshqa sessiyalar bekor bo'ladi", r.status === 401, r.status);
 r = await tuman("/profile", { method: "PUT", json: { fullName: "Karimov Akmal", theme: "LIGHT" } });
 check("boshqa xodimning ismini olib bo'lmaydi", r.status === 400, r.status);
+for (const spoof of ["karimov  akmal", "Кarimov Akmal", "Karimov​ Akmal"]) {
+  r = await tuman("/profile", { method: "PUT", json: { fullName: spoof, theme: "LIGHT" } });
+  check(`o'xshash ism bilan aldab bo'lmaydi (${JSON.stringify(spoof)})`, r.status === 400, r.status);
+}
 await tuman("/profile/password", { method: "PUT", json: { currentPassword: "YangiParol123", newPassword: PASSWORD } });
 
 r = await approver("/dashboard");

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NAME_PATTERN, normalizeName } from "./names";
 
 const dateString = z
   .string()
@@ -18,6 +19,17 @@ const optionalText = z
   .optional()
   .nullable()
   .transform((v) => (v ? v : null));
+
+const personName = z
+  .string()
+  .transform(normalizeName)
+  .pipe(
+    z
+      .string()
+      .min(3, "F.I.Sh. kiritilmagan")
+      .max(120)
+      .regex(NAME_PATTERN, "F.I.Sh. faqat harflar, probel, apostrof va chiziqchadan iborat bo'lsin"),
+  );
 
 export const planItemInput = z.object({
   title: z.string().trim().min(3, "Band nomi juda qisqa"),
@@ -92,7 +104,7 @@ export const ROLE_VALUES = [
 ] as const;
 
 export const userInput = z.object({
-  fullName: z.string().trim().min(3, "F.I.Sh. kiritilmagan"),
+  fullName: personName,
   username: z
     .string()
     .trim()
@@ -125,7 +137,7 @@ export const rolesMatrixInput = z.object({
 });
 
 export const profileInput = z.object({
-  fullName: z.string().trim().min(3, "F.I.Sh. kiritilmagan"),
+  fullName: personName,
   position: optionalText,
   theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
 });
