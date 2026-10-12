@@ -6,6 +6,7 @@ import { api, cn, daysUntil, formatDate } from "@/lib/client";
 import type { PlanStatus } from "@/lib/types";
 import { useSession } from "@/components/providers";
 import { PLAN_STATUS_OPTIONS } from "@/components/status";
+import { ReportRemindersCard } from "@/components/report-reminders";
 import { Card, CardHeader, EmptyState, ErrorBox, MSIcon, PageHeader, ProgressBar, Spinner } from "@/components/ui";
 
 type Dashboard = {
@@ -144,6 +145,8 @@ export default function DashboardPage() {
           hint="reja va natija mosligi"
         />
       </div>
+
+      {can("plan:report") && <ReportRemindersCard />}
 
       {can("plan:approve") && data.pendingApprovals.length > 0 && (
         <Card>

@@ -9,6 +9,7 @@ import {
   canEditPlan,
   canManageAgreements,
   canMonitorAgreement,
+  canRemindReport,
   canReportPlan,
   canViewPlan,
 } from "./plans";
@@ -27,6 +28,7 @@ export const planDetailInclude = {
     include: { _count: { select: { attachments: true, updates: true } } },
   },
   analyses: { orderBy: { createdAt: "desc" }, include: { createdBy: userName } },
+  reminders: { where: { resolvedAt: null }, orderBy: { createdAt: "desc" }, include: { requestedBy: userName } },
 } satisfies Prisma.PlanInclude;
 
 export type PlanWithDetail = Prisma.PlanGetPayload<{ include: typeof planDetailInclude }>;
@@ -56,6 +58,7 @@ export function serializePlan(user: CurrentUser, plan: PlanWithDetail) {
       delete: canEditPlan(user, plan) && plan.status === "DRAFT",
       approve: canApprovePlan(user, plan),
       report: canReportPlan(user, plan),
+      remind: canRemindReport(user, plan),
       manageAgreements: canManageAgreements(user, plan),
       monitor: canMonitorAgreement(user, plan),
       completeAgreements: canCompleteAgreement(user, plan),

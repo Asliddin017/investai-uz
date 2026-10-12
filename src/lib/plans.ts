@@ -48,6 +48,11 @@ export function canReportPlan(user: CurrentUser, plan: PlanAccess) {
   return plan.status === "APPROVED" && user.permissions.has("plan:report") && isAuthorOrColleague(user, plan);
 }
 
+/** Approver-side nudge: ask the author to close an approved trip's report. */
+export function canRemindReport(user: CurrentUser, plan: PlanAccess) {
+  return plan.status === "APPROVED" && user.permissions.has("plan:remind_report") && canViewPlan(user, plan);
+}
+
 export function canManageAgreements(user: CurrentUser, plan: PlanAccess) {
   return (
     (plan.status === "APPROVED" || plan.status === "REPORTED") &&

@@ -113,6 +113,7 @@ model User {
   agreementUpdates AgreementUpdate[]
   attachments      Attachment[]
   analyses         AiAnalysis[]
+  reportReminders  ReportReminder[]
   nameRequests     NameChangeRequest[] @relation("NameRequester")
   reviewedRequests NameChangeRequest[] @relation("NameReviewer")
 }
@@ -177,6 +178,7 @@ model Plan {
   approvals  PlanApproval[]
   agreements Agreement[]
   analyses   AiAnalysis[]
+  reminders  ReportReminder[]
 
   @@index([status])
   @@index([creatorId])
@@ -322,4 +324,19 @@ model NameChangeRequest {
 
   @@index([status, createdAt])
   @@index([userId])
+}
+
+/// The approver asks the plan's author to close the trip report; resolved when the report is closed.
+model ReportReminder {
+  id            String    @id @default(cuid())
+  planId        String
+  requestedById String
+  message       String?
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+
+  plan        Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  requestedBy User @relation(fields: [requestedById], references: [id])
+
+  @@index([planId, resolvedAt])
 }

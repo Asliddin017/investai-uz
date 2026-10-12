@@ -29,6 +29,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: "plan:view_all", label_uz: "Barcha rejalarni ko'rish", category: "plan" },
   { key: "plan:approve", label_uz: "Rejani tasdiqlash yoki rad etish", category: "plan" },
   { key: "plan:report", label_uz: "Safar natijalarini kiritish", category: "plan" },
+  { key: "plan:remind_report", label_uz: "Hisobotni yakunlashni so'rash", category: "plan" },
 
   { key: "agreement:manage", label_uz: "Kelishuv qo'shish va asos biriktirish", category: "agreement" },
   { key: "agreement:monitor", label_uz: "Kelishuv monitoringini yuritish", category: "agreement" },
@@ -79,6 +80,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, string[]> = {
     "nav:agreements",
     "plan:view_all",
     "plan:approve",
+    "plan:remind_report",
     "agreement:monitor",
     "agreement:complete",
     "ai:analyze",

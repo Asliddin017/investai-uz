@@ -112,12 +112,14 @@ export type PlanDetail = {
   }[];
   agreements: AgreementSummary[];
   analyses: Analysis[];
+  reminders: { id: string; message: string | null; createdAt: string; requestedBy: UserRef }[];
   can: {
     edit: boolean;
     submit: boolean;
     delete: boolean;
     approve: boolean;
     report: boolean;
+    remind: boolean;
     manageAgreements: boolean;
     monitor: boolean;
     completeAgreements: boolean;
@@ -140,4 +142,13 @@ export type AgreementDetail = Omit<AgreementSummary, "_count"> & {
   attachments: { id: string; fileName: string; size: number; mimeType: string; createdAt: string; uploadedBy: UserRef }[];
   updates: { id: string; note: string; progress: number; createdAt: string; createdBy: UserRef }[];
   can: { edit: boolean; attach: boolean; monitor: boolean; complete: boolean };
+};
+
+export type ReportReminder = {
+  id: string;
+  planId: string;
+  message: string | null;
+  createdAt: string;
+  plan: { id: string; title: string; endDate: string };
+  requestedBy: { fullName: string; username: string };
 };

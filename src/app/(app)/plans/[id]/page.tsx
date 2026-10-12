@@ -526,6 +526,8 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectComment, setRejectComment] = useState("");
   const [agreementFor, setAgreementFor] = useState<string | null | undefined>(undefined);
+  const [remindOpen, setRemindOpen] = useState(false);
+  const [remindMessage, setRemindMessage] = useState("");
 
   const { data: plan, isLoading, error } = useQuery({
     queryKey: ["plan", id],
@@ -538,6 +540,8 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
     onSuccess: async (_r, vars) => {
       await qc.invalidateQueries({ queryKey: ["plan", id] });
       await qc.invalidateQueries({ queryKey: ["plans"] });
+      await qc.invalidateQueries({ queryKey: ["reminders"] });
+      await qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast(vars.done);
     },
     onError: (e) => toast(e.message, "error"),
@@ -628,6 +632,11 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
                 </Button>
               </>
             )}
+            {plan.can.remind && (
+              <Button variant="outline" icon="notifications_active" onClick={() => setRemindOpen(true)}>
+                Hisobotni so&apos;rash
+              </Button>
+            )}
             {plan.can.report && (
               <Button
                 icon="fact_check"
@@ -655,6 +664,23 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
           <div>
             <div className="font-medium text-destructive">Reja rad etildi va qayta tahrirlashga qaytarildi</div>
             <div className="mt-0.5">{plan.rejectionReason}</div>
+          </div>
+        </div>
+      )}
+      {plan.status === "APPROVED" && plan.reminders[0] && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-400/50 bg-amber-500/10 px-4 py-3 text-sm">
+          <MSIcon name="notifications_active" className="text-amber-600" />
+          <div>
+            <div className="font-medium">
+              {plan.reminders[0].requestedBy.fullName} hisobotni yakunlashni so&apos;radi ·{" "}
+              <span className="font-normal text-muted-foreground">{formatDateTime(plan.reminders[0].createdAt)}</span>
+            </div>
+            {plan.reminders[0].message && <div className="mt-0.5">{plan.reminders[0].message}</div>}
+            {plan.can.report && (
+              <div className="mt-0.5 text-muted-foreground">
+                Har bir band natijasini kiriting va «Hisobotni yakunlash» tugmasini bosing — AI tahlil shundan keyin tayyor bo&apos;ladi.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -719,6 +745,35 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
       >
         <Field label="Rad etish sababi" required hint="Tuzuvchi nimani tuzatishi kerakligini aniq yozing">
           <Textarea value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} rows={4} autoFocus />
+        </Field>
+      </Dialog>
+
+      <Dialog
+        open={remindOpen}
+        onClose={() => setRemindOpen(false)}
+        title="Hisobotni yakunlashni so'rash"
+        description="Reja muallifi va uning tashkilotidagi hamkasblari eslatmani rejada, menyuda va dashboardda ko'radi"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setRemindOpen(false)}>
+              Bekor qilish
+            </Button>
+            <Button
+              icon="send"
+              loading={action.isPending}
+              onClick={() => {
+                run("/remind", "Eslatma yuborildi", { message: remindMessage });
+                setRemindOpen(false);
+                setRemindMessage("");
+              }}
+            >
+              Yuborish
+            </Button>
+          </>
+        }
+      >
+        <Field label="Izoh" hint="Ixtiyoriy, masalan: 15-oktabrgacha yakunlang">
+          <Textarea value={remindMessage} onChange={(e) => setRemindMessage(e.target.value)} rows={3} autoFocus />
         </Field>
       </Dialog>
 

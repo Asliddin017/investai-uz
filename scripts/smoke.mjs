@@ -85,6 +85,18 @@ check("tasdiqlaydi", r.status === 200);
 r = await author(`/plans/${planId}`, { method: "PUT", json: planBody });
 check("tasdiqlangan reja o'zgarmaydi", r.status === 403, r.status);
 
+// Report reminder from the approver
+r = await author(`/plans/${planId}/remind`, { method: "POST", json: {} });
+check("muallif hisobot so'ray olmaydi (huquq yo'q)", r.status === 403, r.status);
+r = await approver(`/plans/${planId}/remind`, { method: "POST", json: { message: "Juma kunigacha yakunlang" } });
+check("kotibiyat hisobotni so'raydi", r.status === 200, JSON.stringify(r.data));
+r = await approver(`/plans/${planId}/remind`, { method: "POST", json: {} });
+check("24 soat ichida qayta so'rab bo'lmaydi", r.status === 400, r.status);
+r = await author("/reminders");
+check("muallif eslatmani ko'radi", r.data.some((x) => x.planId === planId && x.message === "Juma kunigacha yakunlang"));
+r = await tuman("/reminders");
+check("boshqa tashkilot eslatmani ko'rmaydi", !r.data.some((x) => x.planId === planId));
+
 // 6. Results
 r = await author(`/plans/${planId}`);
 const [i1, i2, i3] = r.data.items;
@@ -122,6 +134,8 @@ r = await author(`/plans/${planId}/report`, { method: "POST" });
 check("hisobot yakunlandi + AI tahlil", r.status === 200 && typeof r.data.score === "number", `score=${r.data.score}`);
 r = await author(`/plans/${planId}`);
 check("holat REPORTED, tahlil saqlangan", r.data.status === "REPORTED" && r.data.analyses.length === 1);
+r = await author("/reminders");
+check("hisobot yakunlangach eslatma yopiladi", !r.data.some((x) => x.planId === planId));
 
 // 9. Close agreement → plan completed
 r = await approver(`/agreements/${agreementId}/status`, { method: "POST", json: { status: "COMPLETED" } });

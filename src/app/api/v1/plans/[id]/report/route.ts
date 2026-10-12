@@ -15,7 +15,10 @@ export const POST = withUser<{ id: string }>(async ({ user, params }) => {
     throw badRequest(`${pending.length} ta band bo'yicha natija kiritilmagan`);
   }
 
-  await db.plan.update({ where: { id: plan.id }, data: { status: "REPORTED", reportedAt: new Date() } });
+  await db.$transaction([
+    db.plan.update({ where: { id: plan.id }, data: { status: "REPORTED", reportedAt: new Date() } }),
+    db.reportReminder.updateMany({ where: { planId: plan.id, resolvedAt: null }, data: { resolvedAt: new Date() } }),
+  ]);
   const analysis = await runPlanAnalysis(plan.id, user.id);
   await completePlanIfDone(plan.id);
   return { ok: true, score: analysis.score };

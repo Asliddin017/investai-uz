@@ -7,6 +7,7 @@ import { api, cn } from "@/lib/client";
 import { useSession } from "./providers";
 import { MSIcon } from "./ui";
 import { usePendingNameRequests } from "./name-requests-panel";
+import { useReportReminders } from "./report-reminders";
 
 type NavItem = { href: string; label: string; icon: string; perm: string | string[] };
 
@@ -35,7 +36,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
 
   const pendingNames = usePendingNameRequests(can("admin:users")).data?.length ?? 0;
-  const badges: Record<string, number> = { "/admin/users": pendingNames };
+  const reportRequests = useReportReminders(can("plan:report")).data?.length ?? 0;
+  const badges: Record<string, number> = { "/admin/users": pendingNames, "/plans": reportRequests };
 
   const allowed = (perm: NavItem["perm"]) => (Array.isArray(perm) ? perm.some(can) : can(perm));
 
