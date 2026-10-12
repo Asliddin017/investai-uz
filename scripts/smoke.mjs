@@ -184,6 +184,21 @@ r = await approver(`/admin/permissions/departments/${tumanDept}`, {
   json: { overrides: [{ permission: "admin:departments", state: "GRANT" }] },
 });
 check("o'zida yo'q ruxsatni tashkilotga bera olmaydi", r.status === 403, r.status);
+// A Super Admin denies plan:create to "tuman"; a lesser admin must not lift that deny.
+await admin(`/admin/permissions/users/${tumanUser.id}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "plan:create", state: "DENY" }] },
+});
+r = await approver(`/admin/permissions/users/${tumanUser.id}`, { method: "PUT", json: { overrides: [] } });
+check("oddiy admin o'zida yo'q ruxsat inkorini olib tashlay olmaydi", r.status === 403, r.status);
+await admin(`/admin/permissions/departments/${tumanDept}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "plan:report", state: "DENY" }] },
+});
+r = await approver(`/admin/permissions/departments/${tumanDept}`, { method: "PUT", json: { overrides: [] } });
+check("oddiy admin tashkilot inkorini olib tashlab huquq bera olmaydi", r.status === 403, r.status);
+await admin(`/admin/permissions/departments/${tumanDept}`, { method: "PUT", json: { overrides: [] } });
+await admin(`/admin/permissions/users/${tumanUser.id}`, { method: "PUT", json: { overrides: [] } });
 await admin(`/admin/permissions/users/${approverUser.id}`, { method: "PUT", json: { overrides: [] } });
 
 r = await admin(`/admin/permissions/departments/${adminUser.departmentId}`, {

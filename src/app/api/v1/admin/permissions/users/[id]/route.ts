@@ -5,7 +5,7 @@ import { PERMISSION_KEYS } from "@/lib/permissions";
 import {
   assertActorKeepsPermissionAdmin,
   assertCanManageRole,
-  assertGrantsWithinActor,
+  assertUserOverridesWithinActor,
   assertUserWithinActor,
 } from "@/lib/permission-guard";
 import { overridesInput } from "@/lib/schemas";
@@ -43,7 +43,7 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
   if (unknown) throw badRequest(`Noma'lum ruxsat: ${unknown.permission}`);
   assertCanManageRole(user, target.role);
   await assertUserWithinActor(user, target, target);
-  assertGrantsWithinActor(user, overrides.filter((o) => o.state === "GRANT").map((o) => o.permission));
+  await assertUserOverridesWithinActor(user, target, overrides);
   if (target.id === user.id) await assertActorKeepsPermissionAdmin(user, { userOverrides: overrides });
 
   await db.$transaction([

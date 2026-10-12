@@ -50,6 +50,46 @@ export async function assertUserWithinActor(
   assertGrantsWithinActor(actor, await effectiveFor(next.role, next.departmentId, overrides));
 }
 
+/**
+ * Every permission a user gains from an override change — an explicit grant or a removed
+ * deny — must be one the acting admin holds.
+ */
+export async function assertUserOverridesWithinActor(
+  actor: CurrentUser,
+  target: { id: string; role: Role; departmentId: string | null },
+  nextOverrides: Override[],
+) {
+  if (actor.role === "SUPER_ADMIN") return;
+  const current = await db.userPermission.findMany({ where: { userId: target.id } });
+  const before = await effectiveFor(target.role, target.departmentId, current);
+  const after = await effectiveFor(target.role, target.departmentId, nextOverrides);
+  assertGrantsWithinActor(actor, [...after].filter((p) => !before.has(p)));
+}
+
+/** Same rule for a department change, checked for every member of the organization. */
+export async function assertDepartmentOverridesWithinActor(
+  actor: CurrentUser,
+  departmentId: string,
+  nextOverrides: Override[],
+) {
+  if (actor.role === "SUPER_ADMIN") return;
+  const [members, currentDept, roleRows] = await Promise.all([
+    db.user.findMany({ where: { departmentId }, include: { permissions: true } }),
+    db.departmentPermission.findMany({ where: { departmentId } }),
+    db.rolePermission.findMany(),
+  ]);
+  const gained = new Set<string>();
+  for (const m of members) {
+    const roleDefaults = roleRows.filter((r) => r.role === m.role).map((r) => r.permission);
+    const before = resolvePermissions(roleDefaults, currentDept, m.permissions);
+    const after = resolvePermissions(roleDefaults, nextOverrides, m.permissions);
+    for (const p of after) if (!before.has(p)) gained.add(p);
+  }
+  // Grants also apply to people who join later, so they are limited even with no members today.
+  for (const o of nextOverrides) if (o.state === "GRANT") gained.add(o.permission);
+  assertGrantsWithinActor(actor, gained);
+}
+
 /** Department-wide overrides also reach Super Admins in that organization. */
 export async function assertCanEditDepartmentPermissions(actor: CurrentUser, departmentId: string) {
   if (actor.role === "SUPER_ADMIN") return;
