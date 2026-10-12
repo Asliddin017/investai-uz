@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NAME_PATTERN, normalizeName } from "./names";
+import { isValidName, normalizeName } from "./names";
 
 const dateString = z
   .string()
@@ -28,7 +28,7 @@ const personName = z
       .string()
       .min(3, "F.I.Sh. kiritilmagan")
       .max(120)
-      .regex(NAME_PATTERN, "F.I.Sh. faqat harflar, probel, apostrof va chiziqchadan iborat bo'lsin"),
+      .refine(isValidName, "F.I.Sh. faqat lotin yoki faqat kirill harflari, probel, apostrof va chiziqchadan iborat bo'lsin"),
   );
 
 export const planItemInput = z.object({
