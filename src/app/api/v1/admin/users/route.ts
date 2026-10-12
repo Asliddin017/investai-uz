@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { badRequest, requirePermission, withUser } from "@/lib/api";
 import { hashPassword } from "@/lib/auth";
 import { userInput } from "@/lib/schemas";
+import { assertCanManageRole } from "@/lib/permission-guard";
 
 export const GET = withUser(async ({ user }) => {
   requirePermission(user, "admin:users", "admin:permissions");
@@ -25,6 +26,7 @@ export const GET = withUser(async ({ user }) => {
 export const POST = withUser(async ({ req, user }) => {
   requirePermission(user, "admin:users");
   const data = userInput.parse(await req.json());
+  assertCanManageRole(user, data.role);
   if (!data.password || data.password.length < 8) throw badRequest("Parol kamida 8 belgi bo'lsin");
   const exists = await db.user.findUnique({ where: { username: data.username } });
   if (exists) throw badRequest("Bu login band");

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { badRequest, notFound, requirePermission, withUser } from "@/lib/api";
 import { PERMISSION_KEYS } from "@/lib/permissions";
 import { overridesInput } from "@/lib/schemas";
+import { assertActorKeepsPermissionAdmin } from "@/lib/permission-guard";
 
 type Params = { id: string };
 
@@ -22,6 +23,7 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
   const { overrides } = overridesInput.parse(await req.json());
   const unknown = overrides.find((o) => !PERMISSION_KEYS.has(o.permission));
   if (unknown) throw badRequest(`Noma'lum ruxsat: ${unknown.permission}`);
+  await assertActorKeepsPermissionAdmin(user, { departmentId: dept.id, departmentOverrides: overrides });
 
   await db.$transaction([
     db.departmentPermission.deleteMany({ where: { departmentId: dept.id } }),

@@ -1,8 +1,9 @@
 import type { Role } from "@prisma/client";
 import { db } from "@/lib/db";
-import { badRequest, requirePermission, withUser } from "@/lib/api";
+import { badRequest, forbidden, requirePermission, withUser } from "@/lib/api";
 import { LOCKED_SUPER_ADMIN_PERMISSIONS, PERMISSION_KEYS, ROLES } from "@/lib/permissions";
 import { rolesMatrixInput } from "@/lib/schemas";
+import { assertActorKeepsPermissionAdmin } from "@/lib/permission-guard";
 
 const ROLE_SET = new Set<string>(ROLES.map((r) => r.value));
 
@@ -19,18 +20,25 @@ export const PUT = withUser(async ({ req, user }) => {
   requirePermission(user, "admin:permissions");
   const { roles } = rolesMatrixInput.parse(await req.json());
 
-  const writes = [];
+  if ("SUPER_ADMIN" in roles && user.role !== "SUPER_ADMIN") {
+    throw forbidden("Super Admin rolini faqat Super Admin o'zgartiradi");
+  }
+
+  const normalized: Record<string, string[]> = {};
   for (const [role, perms] of Object.entries(roles)) {
     if (!ROLE_SET.has(role)) throw badRequest(`Noma'lum rol: ${role}`);
     const unknown = perms.find((p) => !PERMISSION_KEYS.has(p));
     if (unknown) throw badRequest(`Noma'lum ruxsat: ${unknown}`);
     const set = new Set(perms);
     if (role === "SUPER_ADMIN") for (const locked of LOCKED_SUPER_ADMIN_PERMISSIONS) set.add(locked);
-    writes.push(
-      db.rolePermission.deleteMany({ where: { role: role as Role } }),
-      db.rolePermission.createMany({ data: [...set].map((permission) => ({ role: role as Role, permission })) }),
-    );
+    normalized[role] = [...set];
   }
+  await assertActorKeepsPermissionAdmin(user, { roleDefaults: normalized });
+
+  const writes = Object.entries(normalized).flatMap(([role, perms]) => [
+    db.rolePermission.deleteMany({ where: { role: role as Role } }),
+    db.rolePermission.createMany({ data: perms.map((permission) => ({ role: role as Role, permission })) }),
+  ]);
   await db.$transaction(writes);
   return { ok: true };
 });

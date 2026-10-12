@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { badRequest, notFound, requirePermission, withUser } from "@/lib/api";
 import { loadUserWithPermissions } from "@/lib/auth";
-import { LOCKED_SUPER_ADMIN_PERMISSIONS, PERMISSION_KEYS } from "@/lib/permissions";
+import { PERMISSION_KEYS } from "@/lib/permissions";
+import { assertActorKeepsPermissionAdmin, assertCanManageRole } from "@/lib/permission-guard";
 import { overridesInput } from "@/lib/schemas";
 
 type Params = { id: string };
@@ -35,12 +36,8 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
   const { overrides } = overridesInput.parse(await req.json());
   const unknown = overrides.find((o) => !PERMISSION_KEYS.has(o.permission));
   if (unknown) throw badRequest(`Noma'lum ruxsat: ${unknown.permission}`);
-  if (
-    target.id === user.id &&
-    overrides.some((o) => o.state === "DENY" && LOCKED_SUPER_ADMIN_PERMISSIONS.has(o.permission))
-  ) {
-    throw badRequest("O'zingizdan ruxsatlarni boshqarish huquqini olib qo'ya olmaysiz");
-  }
+  assertCanManageRole(user, target.role);
+  if (target.id === user.id) await assertActorKeepsPermissionAdmin(user, { userOverrides: overrides });
 
   await db.$transaction([
     db.userPermission.deleteMany({ where: { userId: target.id } }),

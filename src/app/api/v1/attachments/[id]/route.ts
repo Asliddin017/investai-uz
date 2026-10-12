@@ -5,6 +5,8 @@ import { deleteFile, readFile } from "@/lib/storage";
 
 type Params = { id: string };
 
+const INLINE_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/gif", "image/webp"]);
+
 async function loadAttachment(id: string) {
   const attachment = await db.attachment.findUnique({ where: { id } });
   if (!attachment) throw notFound("Fayl topilmadi");
@@ -16,10 +18,15 @@ export const GET = withUser<Params>(async ({ user, params }) => {
   await loadAgreementForUser(user, attachment.agreementId);
   const stream = await readFile(attachment.url);
   if (!stream) throw notFound("Fayl saqlash joyida topilmadi");
+  // Uploaded content is untrusted: only types that cannot run script open in the browser;
+  // anything else (HTML, SVG, ...) is forced to download as an opaque binary.
+  const inline = INLINE_TYPES.has(attachment.mimeType);
   return new Response(stream, {
     headers: {
-      "Content-Type": attachment.mimeType,
-      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(attachment.fileName)}`,
+      "Content-Type": inline ? attachment.mimeType : "application/octet-stream",
+      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(attachment.fileName)}`,
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "sandbox; default-src 'none'; img-src 'self'; object-src 'self'; style-src 'unsafe-inline'",
       "Cache-Control": "private, no-store",
     },
   });

@@ -147,6 +147,56 @@ check("Super Admin'dan qulflangan ruxsatlar olinmaydi", r.data.roles.SUPER_ADMIN
 const catalog = (await admin("/admin/permissions/catalog")).data;
 await admin("/admin/permissions/roles", { method: "PUT", json: { roles: { SUPER_ADMIN: catalog.permissions.map((p) => p.key) } } });
 
+// 11. Security regressions
+const adminUser = users.find((u) => u.username === "admin");
+const approverUser = users.find((u) => u.username === "kotibiyat");
+await admin(`/admin/permissions/users/${approverUser.id}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "admin:users", state: "GRANT" }] },
+});
+r = await approver("/admin/users", {
+  method: "POST",
+  json: { fullName: "Yangi super", username: "smoke-super", password: "Password123", role: "SUPER_ADMIN", isActive: true },
+});
+check("admin:users egasi Super Admin yarata olmaydi", r.status === 403, r.status);
+r = await approver(`/admin/users/${adminUser.id}`, {
+  method: "PUT",
+  json: { fullName: adminUser.fullName, username: "admin", password: "Hijacked123", role: "SUPER_ADMIN", isActive: true },
+});
+check("admin:users egasi Super Admin parolini o'zgartira olmaydi", r.status === 403, r.status);
+await admin(`/admin/permissions/users/${approverUser.id}`, { method: "PUT", json: { overrides: [] } });
+
+r = await admin(`/admin/permissions/departments/${adminUser.departmentId}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "admin:permissions", state: "DENY" }] },
+});
+check("admin o'z tashkilotiga inkor qo'yib o'zini bloklay olmaydi", r.status === 400, r.status);
+r = await admin(`/admin/permissions/users/${adminUser.id}`, {
+  method: "PUT",
+  json: { overrides: [{ permission: "admin:permissions", state: "DENY" }] },
+});
+check("admin o'ziga shaxsiy inkor qo'ya olmaydi", r.status === 400, r.status);
+
+// Uploaded HTML must never render on our origin
+const reported = (await author("/agreements?status=ACTIVE")).data.find((a) => a.title === "O'quv markazi bitimi");
+if (reported) {
+  const f = new FormData();
+  f.append("files", new Blob(["<script>alert(1)</script>"], { type: "text/html" }), "xss.html");
+  await author(`/agreements/${reported.id}/attachments`, { method: "POST", body: f });
+  const att = (await author(`/agreements/${reported.id}`)).data.attachments.find((x) => x.fileName === "xss.html");
+  const raw = await fetch(`${BASE}/api/v1/attachments/${att.id}`, {
+    headers: { cookie: (await fetch(`${BASE}/api/v1/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: "boshqarma", password: PASSWORD }) })).headers.get("set-cookie").split(";")[0] },
+  });
+  check(
+    "HTML fayl yuklab olishga majburlanadi",
+    raw.headers.get("content-type") === "application/octet-stream" &&
+      raw.headers.get("content-disposition").startsWith("attachment") &&
+      raw.headers.get("x-content-type-options") === "nosniff",
+    raw.headers.get("content-type"),
+  );
+  await author(`/attachments/${att.id}`, { method: "DELETE" });
+}
+
 r = await approver("/dashboard");
 check("dashboard ishlaydi", r.status === 200 && typeof r.data.plansByStatus === "object");
 

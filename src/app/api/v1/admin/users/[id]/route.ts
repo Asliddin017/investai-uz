@@ -2,12 +2,14 @@ import { db } from "@/lib/db";
 import { badRequest, notFound, requirePermission, withUser } from "@/lib/api";
 import { hashPassword } from "@/lib/auth";
 import { userInput } from "@/lib/schemas";
+import { assertCanManageRole } from "@/lib/permission-guard";
 
 export const PUT = withUser<{ id: string }>(async ({ req, user, params }) => {
   requirePermission(user, "admin:users");
   const target = await db.user.findUnique({ where: { id: params.id } });
   if (!target) throw notFound("Foydalanuvchi topilmadi");
   const data = userInput.parse(await req.json());
+  assertCanManageRole(user, target.role, data.role);
 
   if (target.id === user.id && (!data.isActive || data.role !== target.role)) {
     throw badRequest("O'z hisobingizni o'chira yoki rolini o'zgartira olmaysiz");
