@@ -10,7 +10,7 @@ type Dept = {
   id: string;
   name: string;
   type: string;
-  _count: { users: number; plans: number; permissions: number };
+  _count: { users: number; plans: number };
 };
 
 const TYPES = [
@@ -119,7 +119,6 @@ export default function DepartmentsPage() {
                 <th className="px-4 py-2.5 font-medium">Turi</th>
                 <th className="px-4 py-2.5 text-center font-medium">Xodimlar</th>
                 <th className="px-4 py-2.5 text-center font-medium">Safarlar</th>
-                <th className="px-4 py-2.5 text-center font-medium">Ruxsat sozlamalari</th>
                 <th className="px-4 py-2.5" />
               </tr>
             </thead>
@@ -130,7 +129,6 @@ export default function DepartmentsPage() {
                   <td className="px-4 py-3 text-muted-foreground">{typeLabel(d.type)}</td>
                   <td className="px-4 py-3 text-center tabular-nums">{d._count.users}</td>
                   <td className="px-4 py-3 text-center tabular-nums">{d._count.plans}</td>
-                  <td className="px-4 py-3 text-center tabular-nums">{d._count.permissions || "—"}</td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <Button size="sm" variant="ghost" icon="edit" onClick={() => setEditing(d)}>
                       Tahrirlash

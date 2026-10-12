@@ -83,8 +83,8 @@ const GUIDES: Guide[] = [
         «Parolni tiklash» — vaqtinchalik parol beriladi, xodim kirgach o&apos;z parolini qo&apos;yadi.
       </>,
       <>
-        <b>Ruxsatlar:</b> odatda rol bo&apos;yicha sozlash yetarli. Tashkilot yoki alohida xodim uchun istisno kerak bo&apos;lsa —
-        tegishli tabda «Ruxsat» yoki «Inkor».
+        <b>Ruxsatlar:</b> chapdan rolni tanlang, o&apos;ng tomonda shu rol egalari nima qila olishini belgilang va
+        «Saqlash»ni bosing.
       </>,
       <>
         <b>Amallar jurnali:</b> kim, qachon, nima qilgani — kirishlar, tasdiqlar, parol va ruxsat o&apos;zgarishlari.
