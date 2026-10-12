@@ -89,26 +89,26 @@ model Department {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  fullName     String
-  username     String    @unique
-  passwordHash String
-  role         Role
-  position     String?
-  departmentId String?
-  isActive     Boolean   @default(true)
-  theme        Theme     @default(LIGHT)
+  id                 String    @id @default(cuid())
+  fullName           String
+  username           String    @unique
+  passwordHash       String
+  role               Role
+  position           String?
+  departmentId       String?
+  isActive           Boolean   @default(true)
+  theme              Theme     @default(LIGHT)
   /// Bumped on password change or reset; tokens carrying an older value are rejected.
-  sessionVersion Int     @default(0)
+  sessionVersion     Int       @default(0)
   /// Set after an administrator reset: the user must choose a new password before anything else.
-  mustChangePassword Boolean @default(false)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
+  mustChangePassword Boolean   @default(false)
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
 
-  department       Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  department       Department?         @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   permissions      UserPermission[]
-  plans            Plan[]            @relation("PlanCreator")
-  approvedPlans    Plan[]            @relation("PlanApprover")
+  plans            Plan[]              @relation("PlanCreator")
+  approvedPlans    Plan[]              @relation("PlanApprover")
   planVersions     PlanVersion[]
   approvals        PlanApproval[]
   agreements       Agreement[]
@@ -116,6 +116,7 @@ model User {
   attachments      Attachment[]
   analyses         AiAnalysis[]
   reportReminders  ReportReminder[]
+  seenPlans        PlanSeen[]
   auditLogs        AuditLog[]
   nameRequests     NameChangeRequest[] @relation("NameRequester")
   reviewedRequests NameChangeRequest[] @relation("NameReviewer")
@@ -173,15 +174,16 @@ model Plan {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  creator    User?          @relation("PlanCreator", fields: [creatorId], references: [id])
-  approvedBy User?          @relation("PlanApprover", fields: [approvedById], references: [id])
-  department Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  creator    User?            @relation("PlanCreator", fields: [creatorId], references: [id])
+  approvedBy User?            @relation("PlanApprover", fields: [approvedById], references: [id])
+  department Department?      @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   items      PlanItem[]
   versions   PlanVersion[]
   approvals  PlanApproval[]
   agreements Agreement[]
   analyses   AiAnalysis[]
   reminders  ReportReminder[]
+  seenBy     PlanSeen[]
 
   @@index([status])
   @@index([creatorId])
@@ -342,6 +344,18 @@ model ReportReminder {
   requestedBy User @relation(fields: [requestedById], references: [id])
 
   @@index([planId, resolvedAt])
+}
+
+/// When a user last opened a trip; drives the red "new" counts in the sidebar.
+model PlanSeen {
+  userId String
+  planId String
+  seenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@id([userId, planId])
 }
 
 /// Append-only record of who did what and when.

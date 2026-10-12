@@ -5,11 +5,13 @@ import { planInput } from "@/lib/schemas";
 import { loadPlanForUser, serializePlan } from "@/lib/serialize";
 import { deleteFile } from "@/lib/storage";
 import { audit } from "@/lib/audit";
+import { markPlanSeen } from "@/lib/inbox";
 
 type Params = { id: string };
 
 export const GET = withUser<Params>(async ({ user, params }) => {
   const plan = await loadPlanForUser(user, params.id);
+  await markPlanSeen(user.id, plan.id);
   return serializePlan(user, plan);
 });
 

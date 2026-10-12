@@ -532,7 +532,12 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
 
   const { data: plan, isLoading, error } = useQuery({
     queryKey: ["plan", id],
-    queryFn: () => api<PlanDetail>(`/plans/${id}`),
+    queryFn: async () => {
+      const detail = await api<PlanDetail>(`/plans/${id}`);
+      // Opening the trip marks it seen, which clears its red sidebar count.
+      void qc.invalidateQueries({ queryKey: ["inbox"] });
+      return detail;
+    },
   });
 
   const action = useMutation({
@@ -543,6 +548,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
       await qc.invalidateQueries({ queryKey: ["plans"] });
       await qc.invalidateQueries({ queryKey: ["reminders"] });
       await qc.invalidateQueries({ queryKey: ["dashboard"] });
+      await qc.invalidateQueries({ queryKey: ["inbox"] });
       toast(vars.done);
     },
     onError: (e) => toast(e.message, "error"),

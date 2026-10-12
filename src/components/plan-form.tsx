@@ -49,6 +49,7 @@ export function PlanForm({ plan }: { plan?: PlanDetail }) {
     onSuccess: async ({ id, submit }) => {
       await qc.invalidateQueries({ queryKey: ["plans"] });
       await qc.invalidateQueries({ queryKey: ["plan", id] });
+      await qc.invalidateQueries({ queryKey: ["inbox"] });
       toast(submit ? "Safar tasdiqlashga yuborildi" : "Safar saqlandi");
       router.push(`/plans/${id}`);
     },
