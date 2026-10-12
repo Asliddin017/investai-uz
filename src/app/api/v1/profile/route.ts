@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { withUser } from "@/lib/api";
+import { badRequest, withUser } from "@/lib/api";
 import { setThemeCookie } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { profileInput } from "@/lib/schemas";
@@ -16,6 +16,12 @@ export const GET = withUser(async ({ user }) => ({
 
 export const PUT = withUser(async ({ req, user }) => {
   const data = profileInput.parse(await req.json());
+  // A name already worn by another account would let approvals and history read as someone else.
+  const clash = await db.user.findFirst({
+    where: { id: { not: user.id }, fullName: { equals: data.fullName, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (clash) throw badRequest("Bu F.I.Sh. boshqa xodimga tegishli");
   await db.user.update({
     where: { id: user.id },
     data: { fullName: data.fullName, position: data.position, theme: data.theme },

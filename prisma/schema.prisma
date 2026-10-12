@@ -91,6 +91,8 @@ model User {
   departmentId String?
   isActive     Boolean   @default(true)
   theme        Theme     @default(LIGHT)
+  /// Bumped on password change or reset; tokens carrying an older value are rejected.
+  sessionVersion Int     @default(0)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
 

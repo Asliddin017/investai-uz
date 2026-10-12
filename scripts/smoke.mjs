@@ -17,13 +17,15 @@ async function login(username) {
     body: JSON.stringify({ username, password: PASSWORD }),
   });
   if (!res.ok) throw new Error(`login ${username}: ${res.status}`);
-  const cookie = res.headers.get("set-cookie").split(";")[0];
+  let cookie = res.headers.get("set-cookie").split(";")[0];
   return async (path, { method = "GET", json, body } = {}) => {
     const r = await fetch(`${BASE}/api/v1${path}`, {
       method,
       headers: { cookie, ...(json ? { "Content-Type": "application/json" } : {}) },
       body: json ? JSON.stringify(json) : body,
     });
+    const fresh = r.headers.getSetCookie().find((c) => c.startsWith("investai_session="));
+    if (fresh) cookie = fresh.split(";")[0];
     const type = r.headers.get("content-type") ?? "";
     return { status: r.status, data: type.includes("json") ? await r.json() : await r.text() };
   };
@@ -240,6 +242,7 @@ check("profil saqlandi", r.data.fullName === "Yusupov Bekzod Akmalovich" && r.da
 r = await tuman("/profile", { method: "PUT", json: { fullName: "Yusupov Bekzod", position: "Tuman hokimi", theme: "LIGHT", role: "SUPER_ADMIN" } });
 r = await admin("/admin/users");
 check("profil orqali rol o'zgarmaydi", r.data.find((u) => u.username === "tuman").role === "TUMAN_HOKIMI");
+const staleTuman = await login("tuman");
 r = await tuman("/profile/password", { method: "PUT", json: { currentPassword: "noto'g'ri", newPassword: "YangiParol123" } });
 check("noto'g'ri joriy parol bilan parol o'zgarmaydi", r.status === 400, r.status);
 r = await tuman("/profile/password", { method: "PUT", json: { currentPassword: PASSWORD, newPassword: "YangiParol123" } });
@@ -250,6 +253,12 @@ const relog = await fetch(`${BASE}/api/v1/auth/login`, {
   body: JSON.stringify({ username: "tuman", password: "YangiParol123" }),
 });
 check("yangi parol bilan kiradi", relog.status === 200);
+r = await tuman("/profile");
+check("parol almashgach joriy sessiya ishlaydi", r.status === 200, r.status);
+r = await staleTuman("/profile");
+check("parol almashgach boshqa sessiyalar bekor bo'ladi", r.status === 401, r.status);
+r = await tuman("/profile", { method: "PUT", json: { fullName: "Karimov Akmal", theme: "LIGHT" } });
+check("boshqa xodimning ismini olib bo'lmaydi", r.status === 400, r.status);
 await tuman("/profile/password", { method: "PUT", json: { currentPassword: "YangiParol123", newPassword: PASSWORD } });
 
 r = await approver("/dashboard");

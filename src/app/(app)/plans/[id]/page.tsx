@@ -456,7 +456,9 @@ function HistoryTab({ plan }: { plan: PlanDetail }) {
                 </div>
                 <div className="text-sm">
                   <div>
-                    <b>{a.user.fullName}</b> {ACTION_LABEL[a.action].toLowerCase()}{" "}
+                    <b>{a.user.fullName}</b>{" "}
+                    {a.user.username && <span className="font-mono text-xs text-muted-foreground">@{a.user.username}</span>}{" "}
+                    {ACTION_LABEL[a.action].toLowerCase()}{" "}
                     <span className="text-muted-foreground">(v{a.version})</span>
                   </div>
                   <div className="text-xs text-muted-foreground">{formatDateTime(a.createdAt)}</div>

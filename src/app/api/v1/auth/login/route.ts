@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       throw new HttpError(401, "Login yoki parol noto'g'ri");
     }
     await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-    await setSessionCookie(user.id);
+    await setSessionCookie(user.id, user.sessionVersion);
     await setThemeCookie(user.theme);
     return NextResponse.json({ ok: true });
   } catch (err) {

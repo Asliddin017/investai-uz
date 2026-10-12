@@ -13,7 +13,7 @@ import {
   canViewPlan,
 } from "./plans";
 
-const userName = { select: { id: true, fullName: true, position: true } } as const;
+const userName = { select: { id: true, fullName: true, username: true, position: true } } as const;
 
 export const planDetailInclude = {
   creator: userName,

@@ -6,7 +6,7 @@ export type AgreementStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
 export type AgreementDisplayStatus = AgreementStatus | "OVERDUE";
 export type DocumentType = "SHARTNOMA" | "MEMORANDUM" | "BITIM" | "BOSHQA";
 
-export type UserRef = { id: string; fullName: string; position?: string | null };
+export type UserRef = { id: string; fullName: string; username?: string; position?: string | null };
 
 export type PlanListItem = {
   id: string;

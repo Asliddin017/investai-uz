@@ -33,7 +33,9 @@ export const PUT = withUser<{ id: string }>(async ({ req, user, params }) => {
       position: data.position,
       departmentId: data.departmentId,
       isActive: data.isActive,
-      ...(data.password ? { passwordHash: await hashPassword(data.password) } : {}),
+      ...(data.password
+        ? { passwordHash: await hashPassword(data.password), sessionVersion: { increment: 1 } }
+        : {}),
     },
   });
   return { ok: true };

@@ -236,7 +236,9 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
                     <div className="text-sm">
                       <div>{u.note}</div>
                       <div className="mt-0.5 text-xs text-muted-foreground">
-                        {u.createdBy.fullName} · {formatDateTime(u.createdAt)}
+                        {u.createdBy.fullName}
+                        {u.createdBy.username && <span className="font-mono"> @{u.createdBy.username}</span>} ·{" "}
+                        {formatDateTime(u.createdAt)}
                       </div>
                     </div>
                   </li>

@@ -26,8 +26,8 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export async function createSessionToken(userId: string) {
-  return new SignJWT({})
+export async function createSessionToken(userId: string, sessionVersion: number) {
+  return new SignJWT({ sv: sessionVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
@@ -35,17 +35,18 @@ export async function createSessionToken(userId: string) {
     .sign(secretKey());
 }
 
-export async function readSessionToken(token: string): Promise<string | null> {
+export async function readSessionToken(token: string): Promise<{ userId: string; sessionVersion: number } | null> {
   try {
     const { payload } = await jwtVerify(token, secretKey());
-    return payload.sub ?? null;
+    if (!payload.sub || typeof payload.sv !== "number") return null;
+    return { userId: payload.sub, sessionVersion: payload.sv };
   } catch {
     return null;
   }
 }
 
-export async function setSessionCookie(userId: string) {
-  const token = await createSessionToken(userId);
+export async function setSessionCookie(userId: string, sessionVersion: number) {
+  const token = await createSessionToken(userId, sessionVersion);
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -80,12 +81,16 @@ export type CurrentUser = {
   permissions: Set<string>;
 };
 
-export async function loadUserWithPermissions(userId: string): Promise<CurrentUser | null> {
+export async function loadUserWithPermissions(
+  userId: string,
+  sessionVersion?: number,
+): Promise<CurrentUser | null> {
   const user = await db.user.findUnique({
     where: { id: userId },
     include: { department: { include: { permissions: true } }, permissions: true },
   });
   if (!user || !user.isActive) return null;
+  if (sessionVersion !== undefined && sessionVersion !== user.sessionVersion) return null;
   const roleDefaults = await db.rolePermission.findMany({ where: { role: user.role } });
   const permissions = resolvePermissions(
     roleDefaults.map((r) => r.permission),
@@ -108,7 +113,7 @@ export async function loadUserWithPermissions(userId: string): Promise<CurrentUs
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  const userId = await readSessionToken(token);
-  if (!userId) return null;
-  return loadUserWithPermissions(userId);
+  const session = await readSessionToken(token);
+  if (!session) return null;
+  return loadUserWithPermissions(session.userId, session.sessionVersion);
 }
