@@ -232,6 +232,26 @@ if (reported) {
   await author(`/attachments/${att.id}`, { method: "DELETE" });
 }
 
+// 12. Self-service profile
+r = await tuman("/profile", { method: "PUT", json: { fullName: "Yusupov Bekzod Akmalovich", position: "Tuman hokimi", theme: "DARK" } });
+check("xodim o'z profilini o'zgartiradi", r.status === 200);
+r = await tuman("/profile");
+check("profil saqlandi", r.data.fullName === "Yusupov Bekzod Akmalovich" && r.data.theme === "DARK");
+r = await tuman("/profile", { method: "PUT", json: { fullName: "Yusupov Bekzod", position: "Tuman hokimi", theme: "LIGHT", role: "SUPER_ADMIN" } });
+r = await admin("/admin/users");
+check("profil orqali rol o'zgarmaydi", r.data.find((u) => u.username === "tuman").role === "TUMAN_HOKIMI");
+r = await tuman("/profile/password", { method: "PUT", json: { currentPassword: "noto'g'ri", newPassword: "YangiParol123" } });
+check("noto'g'ri joriy parol bilan parol o'zgarmaydi", r.status === 400, r.status);
+r = await tuman("/profile/password", { method: "PUT", json: { currentPassword: PASSWORD, newPassword: "YangiParol123" } });
+check("parol o'zgaradi", r.status === 200, JSON.stringify(r.data));
+const relog = await fetch(`${BASE}/api/v1/auth/login`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ username: "tuman", password: "YangiParol123" }),
+});
+check("yangi parol bilan kiradi", relog.status === 200);
+await tuman("/profile/password", { method: "PUT", json: { currentPassword: "YangiParol123", newPassword: PASSWORD } });
+
 r = await approver("/dashboard");
 check("dashboard ishlaydi", r.status === 200 && typeof r.data.plansByStatus === "object");
 

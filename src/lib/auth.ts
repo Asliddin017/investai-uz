@@ -1,11 +1,13 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
-import type { Role } from "@prisma/client";
+import type { Role, Theme } from "@prisma/client";
 import { db } from "./db";
 import { resolvePermissions } from "./permissions";
 
 export const SESSION_COOKIE = "investai_session";
+/** Readable by the root layout so the page renders in the right theme without a flash. */
+export const THEME_COOKIE = "investai_theme";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 function secretKey() {
@@ -57,6 +59,15 @@ export async function clearSessionCookie() {
   (await cookies()).delete(SESSION_COOKIE);
 }
 
+export async function setThemeCookie(theme: Theme) {
+  (await cookies()).set(THEME_COOKIE, theme.toLowerCase(), {
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+}
+
 export type CurrentUser = {
   id: string;
   fullName: string;
@@ -65,6 +76,7 @@ export type CurrentUser = {
   position: string | null;
   departmentId: string | null;
   departmentName: string | null;
+  theme: Theme;
   permissions: Set<string>;
 };
 
@@ -88,6 +100,7 @@ export async function loadUserWithPermissions(userId: string): Promise<CurrentUs
     position: user.position,
     departmentId: user.departmentId,
     departmentName: user.department?.name ?? null,
+    theme: user.theme,
     permissions,
   };
 }

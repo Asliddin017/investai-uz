@@ -25,6 +25,12 @@ enum DepartmentType {
   SHAHAR_HOKIMLIGI
 }
 
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
 enum OverrideState {
   GRANT
   DENY
@@ -84,6 +90,7 @@ model User {
   position     String?
   departmentId String?
   isActive     Boolean   @default(true)
+  theme        Theme     @default(LIGHT)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
 

@@ -19,6 +19,48 @@
   --sidebar-active: #1f6b4f;
 }
 
+:root[data-theme="dark"] {
+  --background: #0f1614;
+  --foreground: #e4ece9;
+  --card: #17201e;
+  --muted: #212c29;
+  --muted-foreground: #97a7a2;
+  --border: #2c3936;
+  --input: #3a4945;
+  --primary: #3f9a76;
+  --primary-foreground: #ffffff;
+  --primary-soft: #1c3a2f;
+  --accent: #f07a45;
+  --destructive: #e5574b;
+  --destructive-foreground: #ffffff;
+  --sidebar: #0a1210;
+  --sidebar-foreground: #c9d8d3;
+  --sidebar-active: #1f6b4f;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --background: #0f1614;
+    --foreground: #e4ece9;
+    --card: #17201e;
+    --muted: #212c29;
+    --muted-foreground: #97a7a2;
+    --border: #2c3936;
+    --input: #3a4945;
+    --primary: #3f9a76;
+    --primary-foreground: #ffffff;
+    --primary-soft: #1c3a2f;
+    --accent: #f07a45;
+    --destructive: #e5574b;
+    --destructive-foreground: #ffffff;
+    --sidebar: #0a1210;
+    --sidebar-foreground: #c9d8d3;
+    --sidebar-active: #1f6b4f;
+    color-scheme: dark;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -54,4 +96,14 @@ body {
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
   line-height: 1;
   user-select: none;
+}
+
+/* Status text colors tuned for light backgrounds get a lighter step on dark ones. */
+:root[data-theme="dark"] .text-emerald-700 { color: #34d399; }
+:root[data-theme="dark"] .text-amber-700 { color: #fbbf24; }
+:root[data-theme="dark"] .text-amber-600 { color: #fbbf24; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] .text-emerald-700 { color: #34d399; }
+  :root[data-theme="system"] .text-amber-700 { color: #fbbf24; }
+  :root[data-theme="system"] .text-amber-600 { color: #fbbf24; }
 }

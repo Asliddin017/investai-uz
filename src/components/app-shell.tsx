@@ -90,16 +90,30 @@ export function AppShell({ children }: { children: ReactNode }) {
         })}
       </div>
       <div className="border-t border-white/10 px-4 py-4">
-        <div className="text-sm font-medium text-white">{user.fullName}</div>
-        <div className="text-xs text-sidebar-foreground/70">{user.roleLabel}</div>
-        {user.departmentName && <div className="mt-0.5 text-xs text-sidebar-foreground/50">{user.departmentName}</div>}
-        <button
-          onClick={logout}
-          className="mt-3 flex items-center gap-2 text-xs text-sidebar-foreground/80 hover:text-white"
-        >
-          <MSIcon name="logout" className="text-[18px]" />
-          Chiqish
-        </button>
+        <Link href="/profile" onClick={() => setOpen(false)} className="group block">
+          <div className="text-sm font-medium text-white group-hover:underline">{user.fullName}</div>
+          <div className="text-xs text-sidebar-foreground/70">{user.roleLabel}</div>
+          {user.departmentName && (
+            <div className="mt-0.5 text-xs text-sidebar-foreground/50">{user.departmentName}</div>
+          )}
+        </Link>
+        <div className="mt-3 flex items-center gap-4">
+          <Link
+            href="/profile"
+            onClick={() => setOpen(false)}
+            className={cn(
+              "flex items-center gap-2 text-xs hover:text-white",
+              pathname === "/profile" ? "text-white" : "text-sidebar-foreground/80",
+            )}
+          >
+            <MSIcon name="manage_accounts" className="text-[18px]" />
+            Profil
+          </Link>
+          <button onClick={logout} className="flex items-center gap-2 text-xs text-sidebar-foreground/80 hover:text-white">
+            <MSIcon name="logout" className="text-[18px]" />
+            Chiqish
+          </button>
+        </div>
       </div>
     </nav>
   );

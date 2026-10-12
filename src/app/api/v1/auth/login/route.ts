@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { setSessionCookie, verifyPassword } from "@/lib/auth";
+import { setSessionCookie, setThemeCookie, verifyPassword } from "@/lib/auth";
 import { errorResponse, HttpError } from "@/lib/api";
 
 const loginInput = z.object({ username: z.string().trim().min(1), password: z.string().min(1) });
@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     }
     await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     await setSessionCookie(user.id);
+    await setThemeCookie(user.theme);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

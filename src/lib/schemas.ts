@@ -123,3 +123,19 @@ export const overridesInput = z.object({
 export const rolesMatrixInput = z.object({
   roles: z.record(z.string(), z.array(z.string())),
 });
+
+export const profileInput = z.object({
+  fullName: z.string().trim().min(3, "F.I.Sh. kiritilmagan"),
+  position: optionalText,
+  theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
+});
+
+export const passwordChangeInput = z
+  .object({
+    currentPassword: z.string().min(1, "Joriy parolni kiriting"),
+    newPassword: z.string().min(8, "Yangi parol kamida 8 belgi bo'lsin").max(128),
+  })
+  .refine((v) => v.newPassword !== v.currentPassword, {
+    message: "Yangi parol joriy paroldan farq qilsin",
+    path: ["newPassword"],
+  });

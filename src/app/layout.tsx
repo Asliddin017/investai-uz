@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import { Providers } from "@/components/providers";
+import { THEME_COOKIE } from "@/lib/auth";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin", "cyrillic"] });
@@ -11,9 +13,13 @@ export const metadata: Metadata = {
   description: "Viloyat hokimligi xorijiy investitsiya safarlari va kelishuvlar monitoringi tizimi",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+const THEMES = new Set(["light", "dark", "system"]);
+
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const saved = (await cookies()).get(THEME_COOKIE)?.value ?? "light";
+  const theme = THEMES.has(saved) ? saved : "light";
   return (
-    <html lang="uz">
+    <html lang="uz" data-theme={theme}>
       <head>
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
