@@ -55,7 +55,7 @@ npm run db:seed
 npm run dev
 ```
 
-Demo loginlar (parol `Demo12345!`, `SEED_PASSWORD` bilan o'zgartiriladi): `admin`, `kotibiyat`, `orinbosar`, `boshqarma`, `tuman`, `kuzatuvchi`.
+Seed faqat rol ruxsatlari va `admin` foydalanuvchisini yaratadi (parol `Demo12345!`, `SEED_PASSWORD` bilan o'zgartiriladi). Demo bo'limlar, foydalanuvchilar (`kotibiyat`, `orinbosar`, `boshqarma`, `tuman`, `kuzatuvchi`) va rejalar kerak bo'lsa: `SEED_DEMO=1 npm run db:seed`.
 
 ## Muhit o'zgaruvchilari
 
@@ -65,7 +65,7 @@ Demo loginlar (parol `Demo12345!`, `SEED_PASSWORD` bilan o'zgartiriladi): `admin
 | `AUTH_SECRET` | sessiya imzosi, kamida 32 belgi |
 | `ANTHROPIC_API_KEY` | AI moslik tahlili (ixtiyoriy) |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob — hujjatlar saqlanadi (Vercel'da majburiy, lokalda `uploads/`) |
-| `SEED_PASSWORD`, `SEED_DEMO` | seed paroli; `SEED_DEMO=0` — demo rejalarsiz |
+| `SEED_PASSWORD`, `SEED_DEMO` | seed paroli; `SEED_DEMO=1` — demo bo'limlar, foydalanuvchilar va rejalar |
 
 ## Tekshiruvlar
 

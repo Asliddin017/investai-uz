@@ -1,5 +1,5 @@
 // End-to-end smoke test of the whole plan → approval → report → agreement → monitoring flow.
-// Usage: BASE_URL=http://localhost:3100 node scripts/smoke.mjs   (needs a seeded database)
+// Usage: BASE_URL=http://localhost:3100 node scripts/smoke.mjs   (needs a database seeded with SEED_DEMO=1)
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 const PASSWORD = process.env.SEED_PASSWORD ?? "Demo12345!";

@@ -27,13 +27,31 @@ const USERS: { username: string; fullName: string; role: Role; position: string;
 const day = 24 * 60 * 60 * 1000;
 const daysFromNow = (n: number) => new Date(Date.now() + n * day);
 
-async function seedReference() {
+async function seedPermissions() {
   for (const [role, perms] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
     const existing = await db.rolePermission.count({ where: { role: role as Role } });
     if (existing === 0) {
       await db.rolePermission.createMany({ data: perms.map((permission) => ({ role: role as Role, permission })) });
     }
   }
+}
+
+async function seedAdmin() {
+  const admin = USERS[0];
+  await db.user.upsert({
+    where: { username: admin.username },
+    update: {},
+    create: {
+      username: admin.username,
+      fullName: admin.fullName,
+      role: admin.role,
+      position: admin.position,
+      passwordHash: await bcrypt.hash(PASSWORD, 10),
+    },
+  });
+}
+
+async function seedDemoReference() {
   const depts = new Map<string, string>();
   for (const d of DEPARTMENTS) {
     const row = await db.department.upsert({ where: { name: d.name }, update: {}, create: d });
@@ -211,8 +229,15 @@ async function seedDemoPlans(users: Map<string, string>, depts: Map<string, stri
 }
 
 async function main() {
-  const { depts, users } = await seedReference();
-  if (process.env.SEED_DEMO !== "0") await seedDemoPlans(users, depts);
+  await seedPermissions();
+  // Demo departments, users and plans are opt-in; by default only the admin login is created.
+  if (process.env.SEED_DEMO !== "1") {
+    await seedAdmin();
+    console.log(`Seed tayyor. Login: ${USERS[0].username}`);
+    return;
+  }
+  const { depts, users } = await seedDemoReference();
+  await seedDemoPlans(users, depts);
   console.log(`Seed tayyor. Demo loginlar: ${USERS.map((u) => u.username).join(", ")}`);
 }
 
