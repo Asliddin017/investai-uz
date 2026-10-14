@@ -9,8 +9,11 @@ const READABLE_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "i
 /** Inline request data stays well under Gemini's 20 MB request limit. */
 const DOCUMENT_BUDGET_BYTES = 14 * 1024 * 1024;
 
-/** Set AI_READ_DOCUMENTS=false to keep attachment contents away from the AI provider. */
-const readDocuments = () => process.env.AI_READ_DOCUMENTS !== "false";
+/**
+ * Off unless AI_READ_DOCUMENTS=true: on Gemini's free tier the provider may use what it is sent,
+ * so agreement files stay private by default and the AI judges the entered agreement data only.
+ */
+const readDocuments = () => process.env.AI_READ_DOCUMENTS === "true";
 
 type FileRef = { id: string; fileName: string; mimeType: string; size: number; url: string };
 
@@ -67,7 +70,7 @@ export async function runPlanAnalysis(planId: string, userId: string) {
           documentNumber: a.documentNumber,
           signedDate: a.signedDate?.toISOString().slice(0, 10) ?? null,
           amount: a.amount ? `${a.amount.toString()} ${a.currency ?? ""}`.trim() : null,
-          files: a.attachments.map((f) => ({ name: f.fileName, read: read.has(f.id) })),
+          ...(readDocuments() && { files: a.attachments.map((f) => ({ name: f.fileName, read: read.has(f.id) })) }),
         })),
     })),
     extraAgreements: plan.agreements

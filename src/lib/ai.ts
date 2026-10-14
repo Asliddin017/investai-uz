@@ -81,8 +81,11 @@ Baholash qoidalari:
   hisobga olingan kelishuvlarni nomi va hamkori bilan sanab o'ting (masalan: «Memorandum: ... (hamkor)»).
 - gap maydoniga reja 100 ball olishi uchun nima yetishmaganini bitta aniq jumlada yozing
   (masalan: «Kelishuv hujjati biriktirilmagan»); ball 100 bo'lsa, bo'sh qoldiring.
-- Kelishuvlarga biriktirilgan hujjat fayllari so'rovdan keyin alohida beriladi, har biri qaysi kelishuvga
-  tegishli ekani yozilgan holda. Har bir faylni o'qing va kelishuv ma'lumotlari bilan solishtiring: hujjat turi,
+- Kelishuvda files maydoni bo'lmasa, fayllar tekshirilmaydi: kiritilgan kelishuvning o'zini hujjat bilan
+  tasdiqlangan deb hisoblang va documents maydonini bo'sh qoldiring. Quyidagi ikki qoida faqat files maydoni
+  bor kelishuvlarga tegishli.
+- read: true bo'lgan fayllar so'rovdan keyin alohida beriladi, har biri qaysi kelishuvga tegishli ekani
+  yozilgan holda. Har bir faylni o'qing va kelishuv ma'lumotlari bilan solishtiring: hujjat turi,
   hamkor nomi, raqami, sanasi, summasi mos keladimi, imzo va muhr bormi, mazmuni reja kutilgan natijasiga
   tegishlimi. Natijani documents maydoniga 1–2 jumlada yozing (masalan: «Memorandum imzolangan, hamkor va
   summa mos»). Faylda topilgan nomuvofiqlikni aniq ayting.

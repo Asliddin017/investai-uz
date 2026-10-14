@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatDate, formatDateTime, formatMoney } from "@/lib/client";
 import type { ItemResult, PlanDetail, PlanItem, PlanStatus } from "@/lib/types";
@@ -354,9 +354,11 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
   );
 }
 
+const AI_FAILED_MODEL = "heuristic:ai-failed";
+
 function modelLabel(model: string) {
   if (model === "heuristic") return "oddiy hisob-kitob (AI kaliti sozlanmagan)";
-  if (model === "heuristic:ai-failed") return "oddiy hisob-kitob (AI javob bermadi — keyinroq qayta tahlil qiling)";
+  if (model === AI_FAILED_MODEL) return "oddiy hisob-kitob (AI javob bermadi — keyinroq qayta tahlil qiling)";
   return model;
 }
 
@@ -372,6 +374,16 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
     onError: (e) => toast(e.message, "error"),
   });
   const [latest, ...older] = plan.analyses;
+
+  // The free Gemini tier is often busy; when it did not answer last time, try once more on opening.
+  const retried = useRef(false);
+  const lastFailed = latest?.model === AI_FAILED_MODEL;
+  useEffect(() => {
+    if (!lastFailed || !plan.can.analyze || retried.current) return;
+    retried.current = true;
+    rerun.mutate();
+  }, [lastFailed, plan.can.analyze, rerun]);
+  const docsChecked = !latest?.model.startsWith("heuristic") && !!latest?.details.items.some((i) => i.documents);
   const scores = latest?.details.items.map((i) => i.score) ?? [];
   // Same rule as averageScore() in lib/ai.ts, which is server-only.
   const mean = scores.length ? Math.round(scores.reduce((sum, v) => sum + v, 0) / scores.length) : 0;
@@ -392,7 +404,11 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
         <CardHeader
           title="Rejalar va natijalar mosligi"
           icon="auto_awesome"
-          description={`${formatDateTime(latest.createdAt)} · ${modelLabel(latest.model)}`}
+          description={
+            rerun.isPending && lastFailed
+              ? "AI bilan qayta urinilmoqda..."
+              : `${formatDateTime(latest.createdAt)} · ${modelLabel(latest.model)}`
+          }
           actions={
             plan.can.analyze && (
               <Button size="sm" variant="outline" icon="refresh" loading={rerun.isPending} onClick={() => rerun.mutate()}>
@@ -424,8 +440,10 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
                 )}
                 <div className="mt-1.5 text-xs text-muted-foreground">
                   Har bir reja balli: erishilgan va kelishuv hujjati bilan tasdiqlangan — 90–100; erishilgan, lekin hujjat
-                  yo&apos;q yoki natija kutilgandan kichik — 50–85; erishilmagan yoki natija kiritilmagan — 0–20. Hujjat
-                  bilan tasdiqlangan deb faqat AI o&apos;qib, mazmuni kelishuvga mos deb topgan fayl (PDF yoki rasm) hisoblanadi.
+                  yo&apos;q yoki natija kutilgandan kichik — 50–85; erishilmagan yoki natija kiritilmagan — 0–20.{" "}
+                  {docsChecked
+                    ? "Hujjat bilan tasdiqlangan deb faqat AI o'qib, mazmuni kelishuvga mos deb topgan fayl (PDF yoki rasm) hisoblanadi."
+                    : "Rejaga kiritilgan kelishuv hujjat hisoblanadi; fayllar ichi tekshirilmagan."}{" "}
                   Rejadan tashqari kelishuvlar foizga ta&apos;sir qilmaydi.
                 </div>
               </div>
