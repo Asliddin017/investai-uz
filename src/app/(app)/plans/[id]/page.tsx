@@ -354,6 +354,12 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
   );
 }
 
+function modelLabel(model: string) {
+  if (model === "heuristic") return "oddiy hisob-kitob (AI kaliti sozlanmagan)";
+  if (model === "heuristic:ai-failed") return "oddiy hisob-kitob (AI javob bermadi — keyinroq qayta tahlil qiling)";
+  return model;
+}
+
 function AnalysisTab({ plan }: { plan: PlanDetail }) {
   const toast = useToast();
   const qc = useQueryClient();
@@ -366,6 +372,9 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
     onError: (e) => toast(e.message, "error"),
   });
   const [latest, ...older] = plan.analyses;
+  const scores = latest?.details.items.map((i) => i.score) ?? [];
+  // Same rule as averageScore() in lib/ai.ts, which is server-only.
+  const mean = scores.length ? Math.round(scores.reduce((sum, v) => sum + v, 0) / scores.length) : 0;
 
   if (!latest) {
     return (
@@ -383,7 +392,7 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
         <CardHeader
           title="Rejalar va natijalar mosligi"
           icon="auto_awesome"
-          description={`${formatDateTime(latest.createdAt)} · ${latest.model === "heuristic" ? "oddiy hisob-kitob (AI kaliti sozlanmagan)" : latest.model}`}
+          description={`${formatDateTime(latest.createdAt)} · ${modelLabel(latest.model)}`}
           actions={
             plan.can.analyze && (
               <Button size="sm" variant="outline" icon="refresh" loading={rerun.isPending} onClick={() => rerun.mutate()}>
@@ -399,6 +408,28 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
           </div>
           <div className="space-y-4 text-sm">
             <p className="leading-relaxed">{latest.summary}</p>
+            {scores.length > 0 && (
+              <div className="rounded-md border bg-muted/30 px-3 py-2">
+                <div className="text-xs font-semibold text-muted-foreground uppercase">{latest.score}% qanday hisoblandi</div>
+                <div className="mt-1">
+                  Rejalar ballarining o&apos;rtachasi:{" "}
+                  <span className="font-medium tabular-nums">
+                    ({scores.join(" + ")}) / {scores.length} = {mean}%
+                  </span>
+                </div>
+                {mean !== latest.score && (
+                  <div className="mt-1 text-xs text-amber-700">
+                    Bu tahlil eski usulda saqlangan — aniq hisob uchun qayta tahlil qiling.
+                  </div>
+                )}
+                <div className="mt-1.5 text-xs text-muted-foreground">
+                  Har bir reja balli: erishilgan va kelishuv hujjati bilan tasdiqlangan — 90–100; erishilgan, lekin hujjat
+                  yo&apos;q yoki natija kutilgandan kichik — 50–85; erishilmagan yoki natija kiritilmagan — 0–20. Hujjat
+                  bilan tasdiqlangan deb faqat AI o&apos;qib, mazmuni kelishuvga mos deb topgan fayl (PDF yoki rasm) hisoblanadi.
+                  Rejadan tashqari kelishuvlar foizga ta&apos;sir qilmaydi.
+                </div>
+              </div>
+            )}
             {latest.details.extraAchievements && (
               <div className="rounded-md bg-amber-50 px-3 py-2">
                 <div className="text-xs font-semibold text-amber-800 uppercase">Qo&apos;shimcha yutuqlar</div>
@@ -423,16 +454,40 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
               <tr>
                 <th className="px-5 py-2 font-medium">Reja</th>
                 <th className="w-48 px-5 py-2 font-medium">Moslik</th>
-                <th className="px-5 py-2 font-medium">Izoh</th>
+                <th className="px-5 py-2 font-medium">Nima uchun shu ball</th>
               </tr>
             </thead>
             <tbody>
               {latest.details.items.map((ai) => {
                 const item = plan.items.find((i) => i.order === ai.order);
+                const agreements = item ? plan.agreements.filter((a) => a.planItemId === item.id) : [];
                 return (
-                  <tr key={ai.order} className="border-t">
+                  <tr key={ai.order} className="border-t align-top">
                     <td className="px-5 py-2.5">
-                      {ai.order}. {item?.title}
+                      <div>
+                        {ai.order}. {item?.title}
+                      </div>
+                      {item && (
+                        <div className="mt-1 space-y-1 text-xs text-muted-foreground">
+                          <div>
+                            <ItemResultLabel result={item.result} />
+                          </div>
+                          {agreements.length === 0 ? (
+                            <div>Kelishuv biriktirilmagan</div>
+                          ) : (
+                            agreements.map((a) => (
+                              <Link
+                                key={a.id}
+                                href={`/agreements/${a.id}`}
+                                className="flex items-center gap-1 hover:text-primary hover:underline"
+                              >
+                                <MSIcon name="handshake" className="text-[14px] text-primary" />
+                                {documentTypeLabel(a.documentType)}: {a.title}
+                              </Link>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-5 py-2.5">
                       <div className="flex items-center gap-2">
@@ -440,7 +495,22 @@ function AnalysisTab({ plan }: { plan: PlanDetail }) {
                         <span className="w-10 text-right text-xs font-medium tabular-nums">{ai.score}%</span>
                       </div>
                     </td>
-                    <td className="px-5 py-2.5 text-muted-foreground">{ai.comment}</td>
+                    <td className="px-5 py-2.5">
+                      <div className="text-muted-foreground">{ai.comment}</div>
+                      {ai.documents && (
+                        <div className="mt-1 flex items-start gap-1 text-xs">
+                          <MSIcon name="description" className="text-[14px] text-primary" />
+                          <span>
+                            <span className="font-medium">Hujjat tekshiruvi:</span> {ai.documents}
+                          </span>
+                        </div>
+                      )}
+                      {ai.gap && ai.score < 100 && (
+                        <div className="mt-1 text-xs text-amber-700">
+                          <span className="font-medium">{100 - ai.score}% yo&apos;qotildi:</span> {ai.gap}
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 );
               })}

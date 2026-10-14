@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { heuristicAnalysis, type AnalysisInput } from "@/lib/ai";
+import { averageScore, heuristicAnalysis, type AnalysisInput } from "@/lib/ai";
 
 const doc = { title: "Shartnoma", partner: "X", documentType: "Shartnoma", deadline: "2027-01-01" };
 
@@ -31,5 +31,27 @@ describe("heuristicAnalysis", () => {
 
   it("recommends next steps for failed items", () => {
     expect(heuristicAnalysis(input).recommendations).toHaveLength(1);
+  });
+
+  it("names the agreements behind a score and says what is missing", () => {
+    const [documented, undocumented, failed] = heuristicAnalysis(input).items;
+    expect(documented.comment).toContain("Shartnoma (X)");
+    expect(documented.gap).toBe("");
+    expect(undocumented.gap).toContain("hujjati");
+    expect(failed.gap).not.toBe("");
+  });
+
+  it("says it did not read attached files", () => {
+    const withFile = { ...doc, files: [{ name: "memo.pdf", read: true }] };
+    const r = heuristicAnalysis({ ...input, items: [{ ...input.items[0], agreements: [withFile] }] });
+    expect(r.items[0].documents).toContain("tekshirilmaydi");
+    expect(heuristicAnalysis(input).items[0].documents).toBe("");
+  });
+});
+
+describe("averageScore", () => {
+  it("is the rounded mean of the item scores", () => {
+    expect(averageScore([{ score: 100 }, { score: 80 }, { score: 0 }, { score: 30 }])).toBe(53);
+    expect(averageScore([])).toBe(0);
   });
 });

@@ -75,7 +75,8 @@ export type Analysis = {
   createdAt: string;
   createdBy: UserRef;
   details: {
-    items: { order: number; score: number; comment: string }[];
+    /** `gap` and `documents` are missing on analyses stored before they were added. */
+    items: { order: number; score: number; comment: string; gap?: string; documents?: string }[];
     extraAchievements: string;
     recommendations: string[];
   };
