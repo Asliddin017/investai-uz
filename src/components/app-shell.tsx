@@ -9,6 +9,7 @@ import { MSIcon } from "./ui";
 import { usePendingNameRequests } from "./name-requests-panel";
 import { useMyTasks } from "./my-tasks";
 import { useInbox } from "./inbox";
+import { isReadyToClose, useOpenAgreements } from "./open-agreements";
 
 type NavItem = { href: string; label: string; icon: string; perm: string };
 
@@ -20,6 +21,7 @@ const NAV: { section?: string; items: NavItem[] }[] = [
       { href: "/approvals", label: "Tasdiqlash", icon: "approval", perm: "plan:approve" },
       { href: "/submitted", label: "Yuborilganlar", icon: "outbox", perm: "plan:create" },
       { href: "/agreements", label: "Kelishuvlar", icon: "handshake", perm: "nav:agreements" },
+      { href: "/closing", label: "Yopiladigan kelishuvlar", icon: "task_alt", perm: "agreement:complete" },
     ],
   },
   {
@@ -41,12 +43,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const pendingNames = usePendingNameRequests(can("admin:users")).data?.length ?? 0;
   const taskCount = useMyTasks().data?.length ?? 0;
+  const readyToClose = useOpenAgreements(can("agreement:complete")).data?.filter(isReadyToClose).length ?? 0;
   const inbox = useInbox(can("plan:approve") || can("plan:create")).data;
   const badges: Record<string, number> = { "/admin/users": pendingNames, "/dashboard": taskCount };
-  // Red until the user opens each new trip.
+  // Red until the user opens each new trip, or while an agreement waits to be closed.
   const alerts: Record<string, number> = {
     "/approvals": inbox?.approvals.filter((i) => i.unseen).length ?? 0,
     "/submitted": inbox?.submitted.filter((i) => i.unseen).length ?? 0,
+    "/closing": readyToClose,
   };
 
 
@@ -98,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         {alerts[item.href] > 0 && (
                           <span
                             className="ml-auto animate-pulse rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white tabular-nums"
-                            title="Ochib ko'rilmagan"
+                            title={item.href === "/closing" ? "Yopilishi kerak" : "Ochib ko'rilmagan"}
                           >
                             {alerts[item.href]}
                           </span>
