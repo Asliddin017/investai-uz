@@ -54,3 +54,9 @@ next-env.d.ts
 npm-debug.log*
 !.env.example
 .seed-password.local
+
+# Local working files, kept out of the repo
+/feature/
+/docs/InvestAI-taqdimot.pptx
+/docs/infografika.html
+/docs/infografika.png
