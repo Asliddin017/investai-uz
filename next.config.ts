@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Self-contained server.js for the Docker image (deploy/). Vercel ignores it.
+  output: "standalone",
 };
 
 export default nextConfig;
