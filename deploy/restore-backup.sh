@@ -10,7 +10,9 @@
 #
 # Xavfsizlik:
 #   1) backup avval vaqtinchalik "investai_incoming" bazasiga yuklanadi — sayt bu paytda ishlab turadi;
-#   2) serverda backup'dagi oxirgi faollikdan (AuditLog) KEYINGI yozuvlar bo'lsa, «y» emas, "investai" deb yozish talab qilinadi;
+#   2) serverda OXIRGI TIKLASHDAN KEYIN yozilgan faollik (AuditLog) bo'lsa — u backup'da yo'q — «y» emas, "investai" deb
+#      yozish talab qilinadi. Chegara vaqti backups/last-restore-max-created.txt da saqlanadi; qo'lda:
+#      sudo SINCE='2026-10-22 13:42:33' bash restore-backup.sh …  (bo'lmasa — backup'dagi oxirgi faollik vaqti);
 #   3) almashtirishdan oldin hozirgi baza /opt/investai/backups/before-restore-<vaqt>.dump ga saqlanadi.
 #   Orqaga qaytarish: sudo bash /opt/investai/backups/restore-backup.sh /opt/investai/backups/before-restore-<vaqt>.dump
 set -euo pipefail
@@ -31,6 +33,7 @@ TS=$(date -u +%Y%m%dT%H%M%SZ)
 BK="$DIR/backups"
 SNAP="$BK/before-restore-$TS.dump"
 RB="$BK/restore-backup.sh"   # skript nusxasi — /tmp dagisi o'chirilsa ham orqaga qaytarish ishlasin
+MARK="$BK/last-restore-max-created.txt"   # oxirgi tiklangan ma'lumotdagi eng so'nggi createdAt
 mkdir -p "$BK" && chmod 700 "$BK"
 [ "$(realpath "$0")" = "$RB" ] || install -m 700 "$0" "$RB"
 
@@ -55,12 +58,15 @@ psql_in -d postgres -c 'CREATE DATABASE investai_incoming' >/dev/null
 $DC exec -T db pg_restore -U investai -d investai_incoming --no-owner --no-acl < "$DUMP" \
   || echo "⚠️  pg_restore ogohlantirish bilan tugadi (odatda 'schema public' — zararsiz). Sanoqni tekshiring."
 
-# 2) solishtirish: serverda backup'dan yangiroq faollik bormi?
+# 2) solishtirish: serverda oxirgi tiklashdan keyingi faollik — u backup'da yo'q va almashtirishda yo'qoladi
 T=$(psql_in -d investai_incoming -At <<'SQL'
 SELECT coalesce((SELECT max("createdAt") FROM "AuditLog"), 'epoch')::text;
 SQL
 )
-NEWER=$(psql_in -d investai -At -v t="$T" <<'SQL' 2>/dev/null
+# Chegara: SINCE (qo'lda) → oxirgi tiklash belgisi → backup'dagi oxirgi faollik
+SINCE=${SINCE:-$(cat "$MARK" 2>/dev/null || true)}
+[ -n "$SINCE" ] || SINCE=$T
+NEWER=$(psql_in -d investai -At -v t="$SINCE" <<'SQL' 2>/dev/null
 SELECT count(*) FROM "AuditLog" WHERE "createdAt" > :'t';
 SQL
 ) || NEWER=0
@@ -74,8 +80,8 @@ show investai_incoming
 echo
 
 if [ "$NEWER" -gt 0 ]; then
-  echo "🔴 DIQQAT: serverda backup'dagi oxirgi faollikdan ($T UTC) KEYIN $NEWER ta audit yozuvi bor."
-  echo "   Davom etsangiz o'sha ishlar saytdan yo'qoladi — faqat zaxira faylda qoladi."
+  echo "🔴 DIQQAT: serverda $SINCE UTC dan KEYIN $NEWER ta audit yozuvi bor — bu ishlar serverning o'zida qilingan."
+  echo "   Ular backup'da yo'q. Davom etsangiz saytdan yo'qoladi — faqat zaxira faylda qoladi."
   echo "   Odatda bu TO'XTASH kerak degani: kim serverda ishlaganini aniqlang."
   read -rp "   Baribir almashtirish uchun 'investai' deb yozing (boshqa javob — to'xtatish): " go
   [ "$go" = investai ] || { drop_incoming; echo "to'xtatildi — sayt va baza o'zgarmadi"; exit 1; }
@@ -107,6 +113,8 @@ if ! psql_in -d postgres -c 'DROP DATABASE IF EXISTS investai WITH (FORCE)' \
                          -c 'ALTER DATABASE investai_incoming RENAME TO investai'; then
   echo "❌ almashtirishda xato. Qaytarish: sudo bash $RB $SNAP"; exit 1
 fi
+printf '%s
+' "$T" > "$MARK"   # keyingi tiklash shu vaqtdan keyingi server yozuvlarini sanaydi
 psql_in -d investai -c \
   'SELECT (SELECT count(*) FROM "User") AS users, (SELECT count(*) FROM "Attachment") AS attachments, (SELECT count(*) FROM "Attachment" WHERE url LIKE '"'"'blob:%'"'"') AS still_blob, (SELECT count(*) FROM _prisma_migrations) AS migrations'
 
