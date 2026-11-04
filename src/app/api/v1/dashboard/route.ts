@@ -1,14 +1,14 @@
 import { db } from "@/lib/db";
 import { requirePermission, withUser } from "@/lib/api";
 import { planVisibilityWhere } from "@/lib/plans";
+import { withUnseenFlag } from "@/lib/inbox";
 
 export const GET = withUser(async ({ user }) => {
   requirePermission(user, "nav:dashboard");
   const planWhere = planVisibilityWhere(user);
   const now = new Date();
-  const in30days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-  const [statusGroups, items, agreementGroups, overdue, upcoming, pending, latestAnalyses, plansByDept] =
+  const [statusGroups, items, agreementGroups, overdue, active, pending, latestAnalyses, plansByDept, updates] =
     await Promise.all([
       db.plan.groupBy({ by: ["status"], where: planWhere, _count: true }),
       db.planItem.groupBy({
@@ -19,9 +19,9 @@ export const GET = withUser(async ({ user }) => {
       db.agreement.groupBy({ by: ["status"], where: { plan: planWhere }, _count: true }),
       db.agreement.count({ where: { plan: planWhere, status: "ACTIVE", deadline: { lt: now } } }),
       db.agreement.findMany({
-        where: { plan: planWhere, status: "ACTIVE", deadline: { gte: now, lte: in30days } },
+        where: { plan: planWhere, status: "ACTIVE" },
         orderBy: { deadline: "asc" },
-        take: 6,
+        take: 8,
         select: { id: true, title: true, partner: true, deadline: true, progress: true },
       }),
       user.permissions.has("plan:approve")
@@ -54,7 +54,27 @@ export const GET = withUser(async ({ user }) => {
           _count: { select: { agreements: true } },
         },
       }),
+      db.agreementUpdate.findMany({
+        where: { agreement: { plan: planWhere } },
+        orderBy: { createdAt: "desc" },
+        take: 8,
+        select: {
+          id: true,
+          agreementId: true,
+          note: true,
+          progress: true,
+          createdAt: true,
+          createdById: true,
+          createdBy: { select: { fullName: true } },
+          agreement: { select: { title: true } },
+        },
+      }),
     ]);
+
+  const seenRows = await db.agreementSeen.findMany({
+    where: { userId: user.id, agreementId: { in: updates.map((u) => u.agreementId) } },
+  });
+  const recentUpdates = withUnseenFlag(updates, user.id, new Map(seenRows.map((r) => [r.agreementId, r.seenAt])));
 
   const scoreByPlan = new Map(latestAnalyses.map((a) => [a.planId, a.score]));
   const deptStats = new Map<
@@ -80,7 +100,8 @@ export const GET = withUser(async ({ user }) => {
     agreementsByStatus: Object.fromEntries(agreementGroups.map((g) => [g.status, g._count])),
     overdueAgreements: overdue,
     averageScore: scores.length ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : null,
-    upcomingDeadlines: upcoming,
+    activeAgreements: active,
+    recentUpdates,
     pendingApprovals: pending,
     departments: [...deptStats.values()]
       .map(({ scores: s, ...row }) => ({

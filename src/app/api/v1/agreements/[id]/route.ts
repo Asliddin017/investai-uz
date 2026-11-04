@@ -3,11 +3,13 @@ import { badRequest, forbidden, withUser } from "@/lib/api";
 import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
 import { agreementInput } from "@/lib/schemas";
 import { audit } from "@/lib/audit";
+import { markAgreementSeen } from "@/lib/inbox";
 
 type Params = { id: string };
 
 export const GET = withUser<Params>(async ({ user, params }) => {
   const agreement = await loadAgreementForUser(user, params.id);
+  await markAgreementSeen(user.id, agreement.id);
   return serializeAgreement(user, agreement);
 });
 

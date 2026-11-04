@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { api, cn, daysUntil, formatDate } from "@/lib/client";
+import { api, cn, daysUntil, formatDate, formatDateTime } from "@/lib/client";
 import type { PlanStatus } from "@/lib/types";
 import { useSession } from "@/components/providers";
 import { PLAN_STATUS_OPTIONS } from "@/components/status";
@@ -15,7 +15,17 @@ type Dashboard = {
   agreementsByStatus: Partial<Record<"ACTIVE" | "COMPLETED" | "CANCELLED", number>>;
   overdueAgreements: number;
   averageScore: number | null;
-  upcomingDeadlines: { id: string; title: string; partner: string; deadline: string; progress: number }[];
+  activeAgreements: { id: string; title: string; partner: string; deadline: string; progress: number }[];
+  recentUpdates: {
+    id: string;
+    agreementId: string;
+    note: string;
+    progress: number;
+    createdAt: string;
+    createdBy: { fullName: string };
+    agreement: { title: string };
+    unseen: boolean;
+  }[];
   pendingApprovals: {
     id: string;
     title: string;
@@ -107,6 +117,7 @@ export default function DashboardPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => api<Dashboard>("/dashboard"),
+    refetchInterval: 60_000,
   });
 
   if (isLoading) return <Spinner />;
@@ -115,6 +126,7 @@ export default function DashboardPage() {
   const plansTotal = Object.values(data.plansByStatus).reduce((s, v) => s + (v ?? 0), 0);
   const maxStatus = Math.max(1, ...Object.values(data.plansByStatus).map((v) => v ?? 0));
   const activeAgreements = data.agreementsByStatus.ACTIVE ?? 0;
+  const unseenUpdates = data.recentUpdates.filter((u) => u.unseen).length;
 
   return (
     <div className="space-y-6">
@@ -150,6 +162,101 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
+          <CardHeader
+            title="Faol kelishuvlar"
+            icon="handshake"
+            description="Monitoringda — eng shoshilinchi yuqorida"
+            actions={
+              activeAgreements > data.activeAgreements.length ? (
+                <Link href="/agreements" className="text-sm font-medium text-primary hover:underline">
+                  Barchasi ({activeAgreements})
+                </Link>
+              ) : undefined
+            }
+          />
+          {data.activeAgreements.length === 0 ? (
+            <div className="p-5 text-sm text-muted-foreground">Monitoringda kelishuv yo&apos;q.</div>
+          ) : (
+            <ul className="divide-y">
+              {data.activeAgreements.map((a) => {
+                const left = daysUntil(a.deadline);
+                return (
+                  <li key={a.id} className="px-5 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link href={`/agreements/${a.id}`} className="text-sm font-medium hover:underline">
+                        {a.title}
+                      </Link>
+                      <span
+                        className={cn(
+                          "shrink-0 text-xs",
+                          left < 0 ? "font-medium text-destructive" : left <= 30 ? "text-amber-700" : "text-muted-foreground",
+                        )}
+                      >
+                        {left < 0 ? `${-left} kun o'tdi` : `${left} kun qoldi`}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <ProgressBar value={a.progress} />
+                      <span className="text-xs tabular-nums">{a.progress}%</span>
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      {a.partner} · {formatDate(a.deadline)}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+
+        <Card>
+          <CardHeader
+            title="Oxirgi monitoring yozuvlari"
+            icon="monitoring"
+            description="Kelishuvlar bo'yicha bajarilgan ishlar"
+            actions={
+              unseenUpdates > 0 ? (
+                <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white tabular-nums">
+                  {unseenUpdates} ta yangi
+                </span>
+              ) : undefined
+            }
+          />
+          {data.recentUpdates.length === 0 ? (
+            <div className="p-5 text-sm text-muted-foreground">Hali monitoring yozuvi yo&apos;q.</div>
+          ) : (
+            <ul className="divide-y">
+              {data.recentUpdates.map((u) => (
+                <li key={u.id}>
+                  <Link
+                    href={`/agreements/${u.agreementId}`}
+                    className={cn("flex gap-3 px-5 py-3 transition-colors hover:bg-muted/40", u.unseen && "bg-red-500/5")}
+                  >
+                    <div className="flex h-9 w-12 shrink-0 items-center justify-center rounded-md bg-primary-soft text-xs font-semibold text-primary tabular-nums">
+                      {u.progress}%
+                    </div>
+                    <div className="min-w-0 flex-1 text-sm">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={cn("truncate", u.unseen ? "font-semibold" : "font-medium")}>{u.agreement.title}</span>
+                        {u.unseen && (
+                          <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white">Yangi</span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 line-clamp-2">{u.note}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {u.createdBy.fullName} · {formatDateTime(u.createdAt)}
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
           <CardHeader title="Safarlar holati bo'yicha" icon="stacked_bar_chart" />
           <div className="space-y-2.5 p-5">
             {PLAN_STATUS_OPTIONS.map((s) => {
@@ -181,79 +288,50 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Card>
-          <CardHeader title="Tashkilotlar kesimida" icon="apartment" description="Hisoboti kiritilgan safarlar" />
-          {data.departments.length === 0 ? (
-            <div className="p-5">
-              <EmptyState icon="apartment" title="Hali hisobot kiritilgan safar yo'q" />
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[520px] text-sm">
-                <thead className="border-b bg-muted/40 text-left text-muted-foreground">
-                  <tr>
-                    <th className="px-5 py-2 font-medium">Tashkilot</th>
-                    <th className="px-3 py-2 text-center font-medium">Safarlar</th>
-                    <th className="px-3 py-2 text-center font-medium">Erishildi</th>
-                    <th className="px-3 py-2 text-center font-medium">Kelishuv</th>
-                    <th className="w-40 px-5 py-2 font-medium">AI moslik</th>
+      <Card>
+        <CardHeader title="Tashkilotlar kesimida" icon="apartment" description="Hisoboti kiritilgan safarlar" />
+        {data.departments.length === 0 ? (
+          <div className="p-5">
+            <EmptyState icon="apartment" title="Hali hisobot kiritilgan safar yo'q" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-sm">
+              <thead className="border-b bg-muted/40 text-left text-muted-foreground">
+                <tr>
+                  <th className="px-5 py-2 font-medium">Tashkilot</th>
+                  <th className="px-3 py-2 text-center font-medium">Safarlar</th>
+                  <th className="px-3 py-2 text-center font-medium">Erishildi</th>
+                  <th className="px-3 py-2 text-center font-medium">Kelishuv</th>
+                  <th className="w-40 px-5 py-2 font-medium">AI moslik</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.departments.map((d) => (
+                  <tr key={d.name} className="border-b last:border-0">
+                    <td className="px-5 py-2.5">{d.name}</td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{d.plans}</td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">
+                      {d.achieved}/{d.items}
+                    </td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{d.agreements}</td>
+                    <td className="px-5 py-2.5">
+                      {d.averageScore === null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <ProgressBar value={d.averageScore} />
+                          <span className="w-9 text-right text-xs font-medium tabular-nums">{d.averageScore}%</span>
+                        </div>
+                      )}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {data.departments.map((d) => (
-                    <tr key={d.name} className="border-b last:border-0">
-                      <td className="px-5 py-2.5">{d.name}</td>
-                      <td className="px-3 py-2.5 text-center tabular-nums">{d.plans}</td>
-                      <td className="px-3 py-2.5 text-center tabular-nums">
-                        {d.achieved}/{d.items}
-                      </td>
-                      <td className="px-3 py-2.5 text-center tabular-nums">{d.agreements}</td>
-                      <td className="px-5 py-2.5">
-                        {d.averageScore === null ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <ProgressBar value={d.averageScore} />
-                            <span className="w-9 text-right text-xs font-medium tabular-nums">{d.averageScore}%</span>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-
-        <Card>
-          <CardHeader title="Yaqin 30 kundagi muddatlar" icon="event_upcoming" />
-          {data.upcomingDeadlines.length === 0 ? (
-            <div className="p-5 text-sm text-muted-foreground">Yaqin muddatli kelishuvlar yo&apos;q.</div>
-          ) : (
-            <ul className="divide-y">
-              {data.upcomingDeadlines.map((a) => (
-                <li key={a.id} className="px-5 py-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <Link href={`/agreements/${a.id}`} className="text-sm font-medium hover:underline">
-                      {a.title}
-                    </Link>
-                    <span className="shrink-0 text-xs text-amber-700">{daysUntil(a.deadline)} kun</span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <ProgressBar value={a.progress} />
-                    <span className="text-xs tabular-nums">{a.progress}%</span>
-                  </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">
-                    {a.partner} · {formatDate(a.deadline)}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { Card, MSIcon } from "./ui";
 
 export type Task = {
   id: string;
-  kind: "approve" | "fix" | "submit" | "results" | "close_report" | "overdue" | "name_request";
+  kind: "approve" | "new_report" | "fix" | "submit" | "results" | "close_report" | "close_agreement" | "overdue" | "name_request";
   title: string;
   hint: string;
   href: string;
@@ -16,10 +16,12 @@ export type Task = {
 
 const KIND: Record<Task["kind"], { icon: string; label: string; action: string }> = {
   approve: { icon: "verified", label: "Tasdiqlash kerak", action: "Ko'rib chiqish" },
+  new_report: { icon: "summarize", label: "Yangi hisobot", action: "Ko'rish" },
   fix: { icon: "undo", label: "Tuzatish kerak", action: "Tuzatish" },
   submit: { icon: "send", label: "Yuborilmagan qoralama", action: "Ochish" },
   results: { icon: "rule", label: "Natija kiritish kerak", action: "Natija kiritish" },
   close_report: { icon: "fact_check", label: "Hisobotni yakunlash", action: "Yakunlash" },
+  close_agreement: { icon: "task_alt", label: "Kelishuvni yopish kerak", action: "Ko'rib chiqish" },
   overdue: { icon: "warning", label: "Muddati o'tgan kelishuv", action: "Yangilash" },
   name_request: { icon: "edit_note", label: "Ism o'zgartirish so'rovi", action: "Ko'rib chiqish" },
 };

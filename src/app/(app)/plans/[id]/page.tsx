@@ -658,8 +658,9 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
     queryKey: ["plan", id],
     queryFn: async () => {
       const detail = await api<PlanDetail>(`/plans/${id}`);
-      // Opening the trip marks it seen, which clears its red sidebar count.
+      // Opening the trip marks it seen, which clears its red sidebar count and its "new report" task.
       void qc.invalidateQueries({ queryKey: ["inbox"] });
+      void qc.invalidateQueries({ queryKey: ["tasks"] });
       return detail;
     },
   });

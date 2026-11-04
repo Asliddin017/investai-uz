@@ -44,7 +44,12 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
 
   const { data: a, isLoading, error } = useQuery({
     queryKey: ["agreement", id],
-    queryFn: () => api<AgreementDetail>(`/agreements/${id}`),
+    queryFn: async () => {
+      const detail = await api<AgreementDetail>(`/agreements/${id}`);
+      // Opening the agreement marks its monitoring entries seen on the dashboard.
+      void qc.invalidateQueries({ queryKey: ["dashboard"] });
+      return detail;
+    },
   });
   const plan = useQuery({
     queryKey: ["plan", a?.planId],
@@ -55,6 +60,7 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
   const refresh = async () => {
     await qc.invalidateQueries({ queryKey: ["agreement", id] });
     await qc.invalidateQueries({ queryKey: ["agreements"] });
+    await qc.invalidateQueries({ queryKey: ["tasks"] });
     if (a) await qc.invalidateQueries({ queryKey: ["plan", a.planId] });
   };
 

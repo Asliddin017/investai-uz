@@ -364,5 +364,58 @@ await admin(`/admin/users/${tumanUser.id}`, {
 r = await approver("/dashboard");
 check("dashboard ishlaydi", r.status === 200 && typeof r.data.plansByStatus === "object");
 
+// Dashboard: active agreements, unseen monitoring entries, approver tasks
+r = await author("/plans", {
+  method: "POST",
+  json: {
+    title: "Smoke: dashboard safari",
+    goal: "Dashboard monitoringini tekshirish",
+    country: "Italiya",
+    startDate: "2026-11-01",
+    endDate: "2026-11-05",
+    items: [{ title: "Hamkorlik", expectedResult: "Shartnoma" }],
+  },
+});
+const dashPlanId = r.data.id;
+await author(`/plans/${dashPlanId}/submit`, { method: "POST" });
+await approver(`/plans/${dashPlanId}/approve`, { method: "POST", json: {} });
+const dashItem = (await author(`/plans/${dashPlanId}`)).data.items[0];
+await author(`/plans/${dashPlanId}/items/${dashItem.id}/result`, { method: "PUT", json: { result: "ACHIEVED", resultNote: "Imzolandi" } });
+const dashAgreementBody = { title: "Smoke: dashboard kelishuvi", partner: "Hamkor", documentType: "SHARTNOMA", deadline: "2035-01-01" };
+r = await author(`/plans/${dashPlanId}/agreements`, { method: "POST", json: dashAgreementBody });
+const dashAgreementId = r.data.id;
+
+const dashEntry = async (who) => (await who("/dashboard")).data.recentUpdates.find((u) => u.agreementId === dashAgreementId);
+const hasTask = async (who, kind, target) => (await who("/tasks")).data.some((t) => t.kind === kind && t.href.endsWith(target));
+const unseenCount = async (who) =>
+  (await who("/dashboard")).data.recentUpdates.filter((u) => u.agreementId === dashAgreementId && u.unseen).length;
+
+await author(`/agreements/${dashAgreementId}/updates`, { method: "POST", json: { note: "Birinchi bosqich", progress: 40 } });
+check("tasdiqlovchi yangi yozuvni ko'rilmagan deb ko'radi", (await dashEntry(approver))?.unseen === true);
+check("muallif uchun o'z yozuvi yangi emas", (await dashEntry(author))?.unseen === false);
+check("boshqa tashkilot yozuvni dashboardda ko'rmaydi", (await dashEntry(tumanAgain)) === undefined);
+const activeIds = async (who) => (await who("/dashboard")).data.activeAgreements.map((a) => a.id);
+check("faol kelishuv tasdiqlovchi dashboardida", (await activeIds(approver)).includes(dashAgreementId));
+check("faol kelishuv boshqa tashkilotga ko'rinmaydi", !(await activeIds(tumanAgain)).includes(dashAgreementId));
+
+await approver(`/agreements/${dashAgreementId}`);
+check("kelishuv ochilgach belgi yo'qoladi", (await dashEntry(approver))?.unseen === false);
+await author(`/agreements/${dashAgreementId}/updates`, { method: "POST", json: { note: "Yakunlandi", progress: 100 } });
+check("keyingi yozuv yana yangi", (await dashEntry(approver))?.unseen === true);
+
+check("100% kelishuv tasdiqlovchi vazifasida", await hasTask(approver, "close_agreement", dashAgreementId));
+check("muallifda yopish vazifasi yo'q", !(await hasTask(author, "close_agreement", dashAgreementId)));
+await author(`/agreements/${dashAgreementId}`, { method: "PUT", json: { ...dashAgreementBody, deadline: "2020-01-01" } });
+check("muddati o'tgan 100% kelishuv ikki marta chiqmaydi", !(await hasTask(approver, "overdue", dashAgreementId)) && (await hasTask(approver, "close_agreement", dashAgreementId)));
+
+await author(`/plans/${dashPlanId}/report`, { method: "POST" });
+check("yangi hisobot tasdiqlovchi vazifasida", await hasTask(approver, "new_report", dashPlanId));
+await approver(`/plans/${dashPlanId}`);
+check("safar ochilgach hisobot vazifasi yo'qoladi", !(await hasTask(approver, "new_report", dashPlanId)));
+await approver(`/agreements/${dashAgreementId}/status`, { method: "POST", json: { status: "COMPLETED" } });
+check("yopilgan kelishuv vazifadan chiqadi", !(await hasTask(approver, "close_agreement", dashAgreementId)));
+check("yopgan odam uchun yozuvlar yangi emas", (await unseenCount(approver)) === 0);
+check("yopilgan kelishuv faol ro'yxatdan chiqadi", !(await activeIds(approver)).includes(dashAgreementId));
+
 console.log(failures === 0 ? "\nHAMMASI O'TDI" : `\n${failures} ta tekshiruv O'TMADI`);
 process.exit(failures === 0 ? 0 : 1);

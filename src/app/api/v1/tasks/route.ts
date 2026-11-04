@@ -2,10 +2,14 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { withUser } from "@/lib/api";
 import { canReviewUser } from "@/lib/name-requests";
+import { isUnseen } from "@/lib/inbox";
+import { planVisibilityWhere } from "@/lib/plans";
+
+const NEW_REPORT_DAYS = 30;
 
 type Task = {
   id: string;
-  kind: "approve" | "fix" | "submit" | "results" | "close_report" | "overdue" | "name_request";
+  kind: "approve" | "new_report" | "fix" | "submit" | "results" | "close_report" | "close_agreement" | "overdue" | "name_request";
   title: string;
   hint: string;
   href: string;
@@ -32,6 +36,37 @@ export const GET = withUser(async ({ user }) => {
         kind: "approve",
         title: plan.title,
         hint: `Tasdiqlang yoki rad eting · ${plan.creator?.fullName ?? ""}`,
+        href: `/plans/${plan.id}`,
+      });
+    }
+  }
+
+  if (p.has("plan:approve")) {
+    // A finished report is news until the approver opens the trip; older ones are no longer news.
+    const since = new Date(Date.now() - NEW_REPORT_DAYS * 24 * 60 * 60 * 1000);
+    const reported = await db.plan.findMany({
+      where: {
+        AND: [
+          planVisibilityWhere(user),
+          { status: { in: ["REPORTED", "COMPLETED"] }, reportedAt: { gte: since }, creatorId: { not: user.id } },
+        ],
+      },
+      orderBy: { reportedAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        reportedAt: true,
+        creator: { select: { fullName: true } },
+        seenBy: { where: { userId: user.id }, select: { seenAt: true } },
+      },
+    });
+    for (const plan of reported) {
+      if (!isUnseen(plan.reportedAt, plan.seenBy[0]?.seenAt)) continue;
+      tasks.push({
+        id: `report-${plan.id}`,
+        kind: "new_report",
+        title: plan.title,
+        hint: `Hisobot yakunlandi · ${plan.creator?.fullName ?? ""}`,
         href: `/plans/${plan.id}`,
       });
     }
@@ -96,6 +131,26 @@ export const GET = withUser(async ({ user }) => {
     }
   }
 
+  const closable = new Set<string>();
+  if (p.has("agreement:complete")) {
+    const done = await db.agreement.findMany({
+      where: { status: "ACTIVE", progress: { gte: 100 }, plan: planVisibilityWhere(user) },
+      orderBy: { deadline: "asc" },
+      take: 20,
+      select: { id: true, title: true, partner: true },
+    });
+    for (const a of done) {
+      closable.add(a.id);
+      tasks.push({
+        id: `closing-${a.id}`,
+        kind: "close_agreement",
+        title: a.title,
+        hint: `100% bajarildi — natijani qabul qilib yoping · ${a.partner}`,
+        href: `/agreements/${a.id}`,
+      });
+    }
+  }
+
   if (p.has("agreement:manage") || p.has("agreement:monitor")) {
     const overdue = await db.agreement.findMany({
       where: { status: "ACTIVE", deadline: { lt: new Date() }, plan: p.has("plan:view_all") ? {} : mine },
@@ -104,6 +159,7 @@ export const GET = withUser(async ({ user }) => {
       select: { id: true, title: true, deadline: true },
     });
     for (const a of overdue) {
+      if (closable.has(a.id)) continue;
       tasks.push({
         id: `overdue-${a.id}`,
         kind: "overdue",

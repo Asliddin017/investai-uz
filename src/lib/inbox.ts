@@ -83,6 +83,26 @@ export async function loadInbox(user: CurrentUser): Promise<Inbox> {
   };
 }
 
+/** Monitoring entries are news to everyone but their author, until the agreement is opened. */
+export function withUnseenFlag<T extends { agreementId: string; createdById: string; createdAt: Date }>(
+  updates: T[],
+  userId: string,
+  seen: Map<string, Date>,
+) {
+  return updates.map((u) => ({
+    ...u,
+    unseen: u.createdById !== userId && isUnseen(u.createdAt, seen.get(u.agreementId)),
+  }));
+}
+
+export async function markAgreementSeen(userId: string, agreementId: string) {
+  await db.agreementSeen.upsert({
+    where: { userId_agreementId: { userId, agreementId } },
+    update: { seenAt: new Date() },
+    create: { userId, agreementId },
+  });
+}
+
 export async function markPlanSeen(userId: string, planId: string) {
   await db.planSeen.upsert({
     where: { userId_planId: { userId, planId } },

@@ -4,6 +4,7 @@ import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
 import { completePlanIfDone } from "@/lib/plans";
 import { agreementStatusInput } from "@/lib/schemas";
 import { audit } from "@/lib/audit";
+import { markAgreementSeen } from "@/lib/inbox";
 
 /** Ends monitoring: the agreement is fulfilled or cancelled. */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
@@ -27,6 +28,8 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
     }),
   ]);
   await completePlanIfDone(agreement.planId);
+  // The approver can close from the list without opening the agreement; nothing is news to them after that.
+  await markAgreementSeen(user.id, agreement.id);
   await audit(user, { action: "agreement.close", entityType: "agreement", entityId: agreement.id, summary: `«${agreement.title}» ${completed ? "yakunlandi" : "bekor qilindi"}` }, req);
   return { ok: true };
 });

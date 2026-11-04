@@ -117,6 +117,7 @@ model User {
   analyses         AiAnalysis[]
   reportReminders  ReportReminder[]
   seenPlans        PlanSeen[]
+  seenAgreements   AgreementSeen[]
   auditLogs        AuditLog[]
   nameRequests     NameChangeRequest[] @relation("NameRequester")
   reviewedRequests NameChangeRequest[] @relation("NameReviewer")
@@ -262,6 +263,7 @@ model Agreement {
   createdBy   User              @relation(fields: [createdById], references: [id])
   attachments Attachment[]
   updates     AgreementUpdate[]
+  seenBy      AgreementSeen[]
 
   @@index([planId])
   @@index([status, deadline])
@@ -356,6 +358,18 @@ model PlanSeen {
   plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@id([userId, planId])
+}
+
+/// When a user last opened an agreement; newer monitoring entries count as unseen.
+model AgreementSeen {
+  userId      String
+  agreementId String
+  seenAt      DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agreement Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, agreementId])
 }
 
 /// Append-only record of who did what and when.
