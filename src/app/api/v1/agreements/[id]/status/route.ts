@@ -15,18 +15,21 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   const completed = status === "COMPLETED";
   if (completed && agreement.attachments.length === 0) throw badRequest(CLOSE_NEEDS_DOCUMENT);
 
+  // With a sum, the percentage stays what the money says; closing does not invent the rest.
+  const finalProgress = completed && agreement.amount === null ? 100 : agreement.progress;
+
   await db.$transaction([
     db.agreementUpdate.create({
       data: {
         agreementId: agreement.id,
         note: note ?? (completed ? "Kelishuv yakunlandi" : "Kelishuv bekor qilindi"),
-        progress: completed ? 100 : agreement.progress,
+        progress: finalProgress,
         createdById: user.id,
       },
     }),
     db.agreement.update({
       where: { id: agreement.id },
-      data: { status, completedAt: new Date(), ...(completed ? { progress: 100 } : {}) },
+      data: { status, completedAt: new Date(), progress: finalProgress },
     }),
   ]);
   await completePlanIfDone(agreement.planId);

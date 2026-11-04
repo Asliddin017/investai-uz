@@ -252,6 +252,8 @@ model Agreement {
   deadline       DateTime
   status         AgreementStatus @default(ACTIVE)
   progress       Int             @default(0)
+  /// Money received so far, in the agreement's currency; when it has a sum, progress follows from this.
+  absorbedAmount Decimal         @default(0) @db.Decimal(18, 2)
   description    String?
   createdById    String
   completedAt    DateTime?
@@ -288,6 +290,8 @@ model AgreementUpdate {
   agreementId String
   note        String
   progress    Int
+  /// Money received with this entry; null for a plain comment.
+  amount      Decimal? @db.Decimal(18, 2)
   createdById String
   createdAt   DateTime @default(now())
 

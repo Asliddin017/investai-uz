@@ -388,6 +388,40 @@ r = await author(`/plans/${dashPlanId}/agreements`, { method: "POST", json: { ..
 r = await approver(`/agreements/${r.data.id}/status`, { method: "POST", json: { status: "CANCELLED", note: "Hamkor voz kechdi" } });
 check("hujjatsiz kelishuvni bekor qilish mumkin", r.status === 200, JSON.stringify(r.data));
 
+// Money: entries record what arrived, the percentage follows, and the sum cannot be exceeded.
+r = await author(`/plans/${dashPlanId}/agreements`, { method: "POST", json: { ...dashAgreementBody, title: "Smoke: 300 mln", amount: 300000000, currency: "USD" } });
+const moneyId = r.data.id;
+const moneyAgreement = async () => (await author(`/agreements/${moneyId}`)).data;
+r = await author(`/agreements/${moneyId}/updates`, { method: "POST", json: { note: "Birinchi tushum", amount: 100000000 } });
+let money = await moneyAgreement();
+check("300 mln dan 100 mln tushdi — 33%", r.status === 200 && money.absorbedAmount === 100000000 && money.progress === 33, JSON.stringify([money.absorbedAmount, money.progress]));
+check("izohda tushgan summa bor", money.updates[0].amount === 100000000);
+r = await author(`/agreements/${moneyId}/updates`, { method: "POST", json: { note: "Ortiqcha tushum", amount: 200000001 } });
+money = await moneyAgreement();
+check("qolgandan ortiq kiritib bo'lmaydi", r.status === 400 && money.absorbedAmount === 100000000, r.data.error);
+r = await author(`/agreements/${moneyId}/updates`, { method: "POST", json: { note: "Foizni qo'lda oshirish", progress: 90 } });
+money = await moneyAgreement();
+check("summali kelishuvda foizni qo'lda o'zgartirib bo'lmaydi", r.status === 200 && money.progress === 33, money.progress);
+r = await author(`/agreements/${moneyId}/updates`, { method: "POST", json: { note: "Qolgani tushdi", amount: 200000000 } });
+money = await moneyAgreement();
+check("hammasi tushgach 100%", money.absorbedAmount === 300000000 && money.progress === 100);
+const lastMoneyEntry = money.updates[0].id;
+r = await author(`/agreements/${moneyId}/updates`, { method: "POST", json: { note: "Yana bir so'm", amount: 1 } });
+check("to'liq tushgach summa qabul qilinmaydi", r.status === 400, r.data.error);
+r = await author(`/agreements/${moneyId}/updates/${lastMoneyEntry}`, { method: "DELETE" });
+money = await moneyAgreement();
+check("izoh o'chsa pul ham qaytadi", r.status === 200 && money.absorbedAmount === 100000000 && money.progress === 33, JSON.stringify(r.data));
+r = await author(`/agreements/${moneyId}`, { method: "PUT", json: { ...dashAgreementBody, title: "Smoke: 300 mln", amount: 50000000, currency: "USD" } });
+check("summani tushgandan kam qilib bo'lmaydi", r.status === 400, r.data.error);
+r = await author(`/agreements/${moneyId}`, { method: "PUT", json: { ...dashAgreementBody, title: "Smoke: 300 mln", amount: 200000000, currency: "USD" } });
+money = await moneyAgreement();
+check("summa o'zgarsa foiz qayta hisoblanadi", r.status === 200 && money.progress === 50, money.progress);
+r = await author(`/plans/${dashPlanId}`);
+check("safar sahifasida tushgan summa", r.data.agreements.find((a) => a.id === moneyId)?.absorbedAmount === 100000000);
+r = await author(`/agreements/${dashAgreementId}/updates`, { method: "POST", json: { note: "Summasiz kelishuv", amount: 5 } });
+check("summasiz kelishuvga pul yozib bo'lmaydi", r.status === 400, r.data.error);
+await approver(`/agreements/${moneyId}/status`, { method: "POST", json: { status: "CANCELLED" } });
+
 const dashEntry = async (who) => (await who("/dashboard")).data.recentUpdates.find((u) => u.agreementId === dashAgreementId);
 const hasTask = async (who, kind, target) => (await who("/tasks")).data.some((t) => t.kind === kind && t.href.endsWith(target));
 const unseenCount = async (who) =>
@@ -401,6 +435,25 @@ const activeIds = async (who) => (await who("/dashboard")).data.activeAgreements
 check("faol kelishuv tasdiqlovchi dashboardida", (await activeIds(approver)).includes(dashAgreementId));
 check("faol kelishuv boshqa tashkilotga ko'rinmaydi", !(await activeIds(tumanAgain)).includes(dashAgreementId));
 
+// A mistaken monitoring entry can be removed by its author only; the percentage falls back.
+await author(`/agreements/${dashAgreementId}/updates`, { method: "POST", json: { note: "Noto'g'ri yozildi", progress: 75 } });
+r = await author(`/agreements/${dashAgreementId}`);
+check("izoh foizni o'zgartiradi", r.data.progress === 75);
+const wrongId = r.data.updates[0].id;
+const firstId = r.data.updates[1].id;
+r = await approver(`/agreements/${dashAgreementId}/updates/${wrongId}`, { method: "DELETE" });
+check("boshqa odam izohini o'chira olmaydi", r.status === 403, r.status);
+r = await tumanAgain(`/agreements/${dashAgreementId}/updates/${wrongId}`, { method: "DELETE" });
+check("boshqa tashkilot izohni o'chira olmaydi", r.status === 403, r.status);
+r = await author(`/agreements/${dashAgreementId}/updates/nope`, { method: "DELETE" });
+check("yo'q izoh — 404", r.status === 404, r.status);
+r = await author(`/agreements/${dashAgreementId}/updates/${wrongId}`, { method: "DELETE" });
+check("muallif izohini o'chiradi", r.status === 200 && r.data.progress === 40, JSON.stringify(r.data));
+r = await author(`/agreements/${dashAgreementId}`);
+check("foiz oldingi izohga qaytadi", r.data.progress === 40 && r.data.updates.length === 1 && r.data.updates[0].id === firstId);
+r = await author(`/plans/${dashPlanId}`);
+const dashInPlan = r.data.agreements.find((a) => a.id === dashAgreementId);
+check("safar sahifasida oxirgi izoh bor", dashInPlan?.updates?.[0]?.note === "Birinchi bosqich");
 await approver(`/agreements/${dashAgreementId}`);
 check("kelishuv ochilgach belgi yo'qoladi", (await dashEntry(approver))?.unseen === false);
 await author(`/agreements/${dashAgreementId}/updates`, { method: "POST", json: { note: "Yakunlandi", progress: 100 } });
@@ -429,7 +482,7 @@ check("yopgan odam uchun yozuvlar yangi emas", (await unseenCount(approver)) ===
 check("yopilgan kelishuv faol ro'yxatdan chiqadi", !(await activeIds(approver)).includes(dashAgreementId));
 r = await approver("/plans");
 const dashRow = r.data.find((p) => p.id === dashPlanId);
-check("o'zlashtirilgan loyihalar: bekor qilingan hisobga kirmaydi", dashRow?.completedAgreementCount === 1 && dashRow?._count.agreements === 2, JSON.stringify(dashRow?._count));
+check("o'zlashtirilgan loyihalar: bekor qilingan hisobga kirmaydi", dashRow?.completedAgreementCount === 1 && dashRow?._count.agreements === 3, JSON.stringify(dashRow?._count));
 
 console.log(failures === 0 ? "\nHAMMASI O'TDI" : `\n${failures} ta tekshiruv O'TMADI`);
 process.exit(failures === 0 ? 0 : 1);

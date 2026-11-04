@@ -36,3 +36,15 @@ export function amountInWords(raw: string) {
   const value = Math.round((n / size) * 100) / 100;
   return `${String(value).replace(".", ",")} ${word}`;
 }
+
+/** "300 mln USD": short enough for tables and tiles; small sums stay whole. */
+export function compactMoney(amount: number, currency?: string | null) {
+  const short = (value: number) => String(Math.round(value * 10) / 10).replace(".", ",");
+  const text =
+    amount >= 1_000_000_000
+      ? `${short(amount / 1_000_000_000)} mlrd`
+      : amount >= 1_000_000
+        ? `${short(amount / 1_000_000)} mln`
+        : String(Math.round(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return currency ? `${text} ${currency}` : text;
+}

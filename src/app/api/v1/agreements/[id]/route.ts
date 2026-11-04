@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { badRequest, forbidden, withUser } from "@/lib/api";
-import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
+import { loadAgreementForUser, progressFromDecimal, serializeAgreement } from "@/lib/agreements";
+import { Prisma } from "@prisma/client";
 import { agreementInput } from "@/lib/schemas";
 import { audit } from "@/lib/audit";
 import { markAgreementSeen } from "@/lib/inbox";
@@ -21,9 +22,14 @@ export const PUT = withUser<Params>(async ({ req, user, params }) => {
     const item = await db.planItem.findFirst({ where: { id: data.planItemId, planId: agreement.planId } });
     if (!item) throw badRequest("Tanlangan reja bu safarga tegishli emas");
   }
+  const newAmount = data.amount === null ? null : new Prisma.Decimal(data.amount);
+  if (agreement.absorbedAmount.gt(newAmount ?? 0)) {
+    throw badRequest(`Summa allaqachon tushgan miqdordan kam bo'lishi mumkin emas: ${agreement.absorbedAmount.toNumber()}`);
+  }
   await db.agreement.update({
     where: { id: agreement.id },
     data: {
+      ...(newAmount ? { progress: progressFromDecimal(newAmount, agreement.absorbedAmount) } : {}),
       planItemId: data.planItemId,
       title: data.title,
       partner: data.partner,

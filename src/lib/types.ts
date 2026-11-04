@@ -59,6 +59,7 @@ export type AgreementSummary = {
   documentNumber: string | null;
   signedDate: string | null;
   amount: number | null;
+  absorbedAmount: number;
   currency: string | null;
   deadline: string;
   status: AgreementStatus;
@@ -66,6 +67,8 @@ export type AgreementSummary = {
   progress: number;
   description: string | null;
   _count: { attachments: number; updates: number };
+  /** On a trip's detail: only the latest monitoring entry. */
+  updates?: { note: string; createdAt: string; createdBy: { fullName: string } }[];
 };
 
 export type Analysis = {
@@ -134,7 +137,7 @@ export type AgreementListItem = AgreementSummary & {
   planItem: { order: number; title: string } | null;
 };
 
-export type AgreementDetail = Omit<AgreementSummary, "_count"> & {
+export type AgreementDetail = Omit<AgreementSummary, "_count" | "updates"> & {
   planId: string;
   completedAt: string | null;
   createdAt: string;
@@ -142,7 +145,7 @@ export type AgreementDetail = Omit<AgreementSummary, "_count"> & {
   planItem: { id: string; order: number; title: string } | null;
   createdBy: UserRef;
   attachments: { id: string; fileName: string; size: number; mimeType: string; createdAt: string; uploadedBy: UserRef }[];
-  updates: { id: string; note: string; progress: number; createdAt: string; createdBy: UserRef }[];
+  updates: { id: string; note: string; progress: number; amount: number | null; createdAt: string; createdBy: UserRef }[];
   can: { edit: boolean; attach: boolean; monitor: boolean; complete: boolean };
 };
 

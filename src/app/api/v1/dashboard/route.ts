@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { requirePermission, withUser } from "@/lib/api";
 import { planVisibilityWhere } from "@/lib/plans";
 import { withUnseenFlag } from "@/lib/inbox";
+import { decimalToNumber } from "@/lib/serialize";
 
 export const GET = withUser(async ({ user }) => {
   requirePermission(user, "nav:dashboard");
@@ -22,7 +23,7 @@ export const GET = withUser(async ({ user }) => {
         where: { plan: planWhere, status: "ACTIVE" },
         orderBy: { deadline: "asc" },
         take: 8,
-        select: { id: true, title: true, partner: true, deadline: true, progress: true },
+        select: { id: true, title: true, partner: true, deadline: true, progress: true, amount: true, absorbedAmount: true, currency: true },
       }),
       user.permissions.has("plan:approve")
         ? db.plan.findMany({
@@ -63,10 +64,11 @@ export const GET = withUser(async ({ user }) => {
           agreementId: true,
           note: true,
           progress: true,
+          amount: true,
           createdAt: true,
           createdById: true,
           createdBy: { select: { fullName: true } },
-          agreement: { select: { title: true } },
+          agreement: { select: { title: true, currency: true } },
         },
       }),
     ]);
@@ -74,7 +76,10 @@ export const GET = withUser(async ({ user }) => {
   const seenRows = await db.agreementSeen.findMany({
     where: { userId: user.id, agreementId: { in: updates.map((u) => u.agreementId) } },
   });
-  const recentUpdates = withUnseenFlag(updates, user.id, new Map(seenRows.map((r) => [r.agreementId, r.seenAt])));
+  const recentUpdates = withUnseenFlag(updates, user.id, new Map(seenRows.map((r) => [r.agreementId, r.seenAt]))).map((u) => ({
+    ...u,
+    amount: decimalToNumber(u.amount),
+  }));
 
   const scoreByPlan = new Map(latestAnalyses.map((a) => [a.planId, a.score]));
   const deptStats = new Map<
@@ -100,7 +105,7 @@ export const GET = withUser(async ({ user }) => {
     agreementsByStatus: Object.fromEntries(agreementGroups.map((g) => [g.status, g._count])),
     overdueAgreements: overdue,
     averageScore: scores.length ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : null,
-    activeAgreements: active,
+    activeAgreements: active.map((a) => ({ ...a, amount: decimalToNumber(a.amount), absorbedAmount: Number(a.absorbedAmount) })),
     recentUpdates,
     pendingApprovals: pending,
     departments: [...deptStats.values()]

@@ -25,7 +25,14 @@ export const planDetailInclude = {
   approvals: { orderBy: { createdAt: "asc" }, include: { user: userName } },
   agreements: {
     orderBy: { createdAt: "asc" },
-    include: { _count: { select: { attachments: true, updates: true } } },
+    include: {
+      _count: { select: { attachments: true, updates: true } },
+      updates: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { note: true, createdAt: true, createdBy: { select: { fullName: true } } },
+      },
+    },
   },
   analyses: { orderBy: { createdAt: "desc" }, include: { createdBy: userName } },
   reminders: { where: { resolvedAt: null }, orderBy: { createdAt: "desc" }, include: { requestedBy: userName } },
@@ -50,6 +57,7 @@ export function serializePlan(user: CurrentUser, plan: PlanWithDetail) {
     agreements: plan.agreements.map((a) => ({
       ...a,
       amount: decimalToNumber(a.amount),
+      absorbedAmount: Number(a.absorbedAmount),
       displayStatus: agreementDisplayStatus(a),
     })),
     can: {

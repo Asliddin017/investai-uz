@@ -65,6 +65,13 @@ export const itemResultInput = z
     path: ["failureReason"],
   });
 
+const moneyField = z
+  .union([z.number(), z.string()])
+  .optional()
+  .nullable()
+  .transform((v) => (v === "" || v === null || v === undefined ? null : Number(v)))
+  .refine((v) => v === null || (Number.isFinite(v) && v >= 0), "Summa noto'g'ri");
+
 export const agreementInput = z.object({
   planItemId: optionalText,
   title: z.string().trim().min(3, "Kelishuv nomi juda qisqa"),
@@ -73,12 +80,7 @@ export const agreementInput = z.object({
   documentType: z.enum(["SHARTNOMA", "MEMORANDUM", "BITIM", "BOSHQA"]),
   documentNumber: optionalText,
   signedDate: optionalDate,
-  amount: z
-    .union([z.number(), z.string()])
-    .optional()
-    .nullable()
-    .transform((v) => (v === "" || v === null || v === undefined ? null : Number(v)))
-    .refine((v) => v === null || (Number.isFinite(v) && v >= 0), "Summa noto'g'ri"),
+  amount: moneyField,
   currency: optionalText,
   deadline: dateString,
   description: optionalText,
@@ -86,7 +88,8 @@ export const agreementInput = z.object({
 
 export const agreementUpdateInput = z.object({
   note: z.string().trim().min(3, "Izoh kiritilmagan"),
-  progress: z.number().int().min(0).max(100),
+  progress: z.number().int().min(0).max(100).optional(),
+  amount: moneyField,
 });
 
 export const agreementStatusInput = z.object({

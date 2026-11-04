@@ -62,6 +62,8 @@ export const AUDIT_ACTIONS: Record<string, string> = {
   "agreement.create": "Kelishuv qo'shdi",
   "agreement.update": "Kelishuvni tahrirladi",
   "agreement.progress": "Monitoring yozuvi qo'shdi",
+  "agreement.progress_delete": "Monitoring yozuvini o'chirdi",
+  "data.import": "Ma'lumot yukladi",
   "agreement.close": "Kelishuvni yopdi",
   "attachment.upload": "Hujjat biriktirdi",
   "attachment.delete": "Hujjatni o'chirdi",

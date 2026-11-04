@@ -143,13 +143,13 @@ async function seedDemoPlans(users: Map<string, string>, depts: Map<string, stri
     data: {
       planId: reported.id, planItemId: i1.id, title: "Tekstil qo'shma korxonasi", partner: "Hanseong Textile Co.",
       partnerCountry: "Koreya", documentType: "SHARTNOMA", documentNumber: "KR-2026-014", signedDate: daysFromNow(-36),
-      amount: 25000000, currency: "USD", deadline: daysFromNow(20), progress: 45, createdById: boshqarma,
+      amount: 25000000, absorbedAmount: 11250000, currency: "USD", deadline: daysFromNow(20), progress: 45, createdById: boshqarma,
     },
   });
   await db.agreement.create({
     data: {
       planId: reported.id, planItemId: i2.id, title: "Elektrotexnika zavodi memorandumi", partner: "Daesung Electric",
-      partnerCountry: "Koreya", documentType: "MEMORANDUM", signedDate: daysFromNow(-35), amount: 12000000,
+      partnerCountry: "Koreya", documentType: "MEMORANDUM", signedDate: daysFromNow(-35), amount: 12000000, absorbedAmount: 3600000,
       currency: "USD", deadline: daysFromNow(-5), progress: 30, createdById: boshqarma,
     },
   });
@@ -170,8 +170,8 @@ async function seedDemoPlans(users: Map<string, string>, depts: Map<string, stri
   });
   await db.agreementUpdate.createMany({
     data: [
-      { agreementId: a1.id, note: "Yer maydoni ajratildi, loyiha hujjatlari tayyorlanmoqda", progress: 25, createdById: boshqarma, createdAt: daysFromNow(-20) },
-      { agreementId: a1.id, note: "Uskunalar uchun birinchi to'lov amalga oshirildi", progress: 45, createdById: boshqarma, createdAt: daysFromNow(-6) },
+      { agreementId: a1.id, note: "Yer maydoni ajratildi, loyiha hujjatlari tayyorlanmoqda", progress: 25, amount: 6250000, createdById: boshqarma, createdAt: daysFromNow(-20) },
+      { agreementId: a1.id, note: "Uskunalar uchun birinchi to'lov amalga oshirildi", progress: 45, amount: 5000000, createdById: boshqarma, createdAt: daysFromNow(-6) },
     ],
   });
   const analysis = heuristicAnalysis({

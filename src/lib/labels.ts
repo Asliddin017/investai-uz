@@ -2,6 +2,44 @@ import type { AgreementStatus, DepartmentType, DocumentType, ItemResult, PlanSta
 
 export const CLOSE_NEEDS_DOCUMENT = "Yakunlash uchun avval asos hujjatini biriktiring";
 
+/** Share of the sum that has arrived; 100% only when all of it has. */
+export function progressFromMoney(amount: number, absorbed: number) {
+  if (amount <= 0) return 0;
+  return Math.min(100, Math.floor((Math.round(absorbed * 100) * 100) / Math.round(amount * 100)));
+}
+
+export function remainingAmount(a: { amount: number; absorbedAmount: number }) {
+  return (Math.round(a.amount * 100) - Math.round(a.absorbedAmount * 100)) / 100;
+}
+
+type MoneyRow = { status: AgreementStatus; amount?: number | null; absorbedAmount?: number; currency?: string | null };
+
+/** Sums per currency; cancelled agreements and those without a sum are left out. */
+export function moneyTotals(agreements: MoneyRow[]) {
+  const totals = new Map<string, { currency: string; amount: number; absorbed: number; remaining: number }>();
+  for (const a of agreements) {
+    if (a.status === "CANCELLED" || a.amount === null || a.amount === undefined) continue;
+    const currency = a.currency ?? "";
+    const row = totals.get(currency) ?? { currency, amount: 0, absorbed: 0, remaining: 0 };
+    row.amount += a.amount;
+    row.absorbed += a.absorbedAmount ?? 0;
+    row.remaining = remainingAmount({ amount: row.amount, absorbedAmount: row.absorbed });
+    totals.set(currency, row);
+  }
+  return [...totals.values()];
+}
+
+/** A trip's overall figure: by money when comparable, otherwise the average; cancelled ones no longer count. */
+export function overallAbsorption(agreements: (MoneyRow & { progress: number })[]) {
+  const counted = agreements.filter((a) => a.status !== "CANCELLED");
+  if (counted.length === 0) return 0;
+  const totals = moneyTotals(counted);
+  if (totals.length === 1 && counted.every((a) => a.amount !== null && a.amount !== undefined)) {
+    return progressFromMoney(totals[0].amount, totals[0].absorbed);
+  }
+  return Math.round(counted.reduce((sum, a) => sum + a.progress, 0) / counted.length);
+}
+
 export const PLAN_STATUS_LABELS: Record<PlanStatus, string> = {
   DRAFT: "Qoralama",
   PENDING: "Tasdiqlashda",

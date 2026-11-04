@@ -8,8 +8,9 @@ import { CLOSE_NEEDS_DOCUMENT } from "@/lib/labels";
 import { useSession } from "@/components/providers";
 import { CloseAgreementDialog, type CloseAs } from "@/components/close-agreement";
 import { isReadyToClose, useOpenAgreements } from "@/components/open-agreements";
+import { MoneyProgress } from "@/components/money-progress";
 import { AgreementStatusBadge, documentTypeLabel } from "@/components/status";
-import { Button, Card, ClickableRow, EmptyState, ErrorBox, PageHeader, ProgressBar, Spinner } from "@/components/ui";
+import { Button, Card, ClickableRow, EmptyState, ErrorBox, PageHeader, Spinner } from "@/components/ui";
 
 export default function ClosingPage() {
   const { can } = useSession();
@@ -44,7 +45,7 @@ export default function ClosingPage() {
                 <th className="px-4 py-2.5 font-medium">Kelishuv</th>
                 <th className="px-4 py-2.5 font-medium">Safar</th>
                 <th className="px-4 py-2.5 font-medium">Muddat</th>
-                <th className="w-40 px-4 py-2.5 font-medium">Bajarilishi</th>
+                <th className="w-56 px-4 py-2.5 font-medium">O&apos;zlashtirish</th>
                 <th className="px-4 py-2.5 font-medium">Holati</th>
                 <th className="px-4 py-2.5" />
               </tr>
@@ -80,10 +81,7 @@ export default function ClosingPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <ProgressBar value={a.progress} />
-                        <span className="text-xs tabular-nums">{a.progress}%</span>
-                      </div>
+                      <MoneyProgress a={a} />
                     </td>
                     <td className="px-4 py-3">
                       <AgreementStatusBadge status={a.displayStatus} />

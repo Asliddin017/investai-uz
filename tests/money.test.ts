@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { amountInWords, groupAmount, normalizeAmount } from "@/lib/money";
+import { amountInWords, compactMoney, groupAmount, normalizeAmount } from "@/lib/money";
+
+describe("compactMoney", () => {
+  it("shortens millions and billions", () => {
+    expect(compactMoney(300_000_000, "USD")).toBe("300 mln USD");
+    expect(compactMoney(1_515_000_000)).toBe("1,5 mlrd");
+    expect(compactMoney(2_500_000, "USD")).toBe("2,5 mln USD");
+  });
+
+  it("keeps small sums whole", () => {
+    expect(compactMoney(0)).toBe("0");
+    expect(compactMoney(750_000, "USD")).toBe("750 000 USD");
+  });
+});
 
 describe("normalizeAmount", () => {
   it("drops the grouping spaces", () => {

@@ -7,6 +7,8 @@ import type { PlanStatus } from "@/lib/types";
 import { useSession } from "@/components/providers";
 import { PLAN_STATUS_OPTIONS } from "@/components/status";
 import { MyTasks } from "@/components/my-tasks";
+import { MoneyProgress } from "@/components/money-progress";
+import { compactMoney } from "@/lib/money";
 import { Card, CardHeader, EmptyState, ErrorBox, MSIcon, PageHeader, ProgressBar, Spinner } from "@/components/ui";
 
 type Dashboard = {
@@ -15,15 +17,25 @@ type Dashboard = {
   agreementsByStatus: Partial<Record<"ACTIVE" | "COMPLETED" | "CANCELLED", number>>;
   overdueAgreements: number;
   averageScore: number | null;
-  activeAgreements: { id: string; title: string; partner: string; deadline: string; progress: number }[];
+  activeAgreements: {
+    id: string;
+    title: string;
+    partner: string;
+    deadline: string;
+    progress: number;
+    amount: number | null;
+    absorbedAmount: number;
+    currency: string | null;
+  }[];
   recentUpdates: {
     id: string;
     agreementId: string;
     note: string;
     progress: number;
+    amount: number | null;
     createdAt: string;
     createdBy: { fullName: string };
-    agreement: { title: string };
+    agreement: { title: string; currency: string | null };
     unseen: boolean;
   }[];
   pendingApprovals: {
@@ -203,10 +215,7 @@ export default function DashboardPage() {
                         {left < 0 ? `${-left} kun o'tdi` : `${left} kun qoldi`}
                       </span>
                     </div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <ProgressBar value={a.progress} />
-                      <span className="text-xs tabular-nums">{a.progress}%</span>
-                    </div>
+                    <MoneyProgress a={a} />
                     <div className="mt-0.5 text-xs text-muted-foreground">
                       {a.partner} · {formatDate(a.deadline)}
                     </div>
@@ -250,6 +259,9 @@ export default function DashboardPage() {
                           <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white">Yangi</span>
                         )}
                       </div>
+                      {u.amount !== null && (
+                        <div className="mt-0.5 font-semibold text-emerald-700 tabular-nums">+{compactMoney(u.amount, u.agreement.currency)} tushdi</div>
+                      )}
                       <div className="mt-0.5 line-clamp-2">{u.note}</div>
                       <div className="mt-0.5 text-xs text-muted-foreground">
                         {u.createdBy.fullName} · {formatDateTime(u.createdAt)}

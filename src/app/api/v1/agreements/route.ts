@@ -37,6 +37,7 @@ export const GET = withUser(async ({ req, user }) => {
   return agreements.map((a) => ({
     ...a,
     amount: decimalToNumber(a.amount),
+    absorbedAmount: Number(a.absorbedAmount),
     displayStatus: agreementDisplayStatus(a),
   }));
 });

@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import type { CurrentUser } from "./auth";
 import { db } from "./db";
 import { forbidden, notFound } from "./api";
@@ -35,12 +35,20 @@ export async function loadAgreementForUser(user: CurrentUser, id: string) {
   return agreement;
 }
 
+/** Percentage for a sum and what has arrived of it; 100% only when all of it has. */
+export function progressFromDecimal(amount: Prisma.Decimal, absorbed: Prisma.Decimal) {
+  if (amount.lte(0)) return 0;
+  return Math.min(100, absorbed.mul(100).div(amount).floor().toNumber());
+}
+
 export function serializeAgreement(user: CurrentUser, a: AgreementWithDetail) {
   const active = a.status === "ACTIVE";
   return {
     ...a,
     amount: decimalToNumber(a.amount),
+    absorbedAmount: Number(a.absorbedAmount),
     displayStatus: agreementDisplayStatus(a),
+    updates: a.updates.map((u) => ({ ...u, amount: decimalToNumber(u.amount) })),
     attachments: a.attachments.map(({ url: _url, ...rest }) => rest),
     can: {
       edit: active && canManageAgreements(user, a.plan),

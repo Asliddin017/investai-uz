@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatDate, formatDateTime, formatMoney } from "@/lib/client";
-import { CLOSE_NEEDS_DOCUMENT } from "@/lib/labels";
+import { CLOSE_NEEDS_DOCUMENT, moneyTotals, overallAbsorption, remainingAmount } from "@/lib/labels";
+import { MoneyProgress } from "@/components/money-progress";
 import type { ItemResult, PlanDetail, PlanItem, PlanStatus } from "@/lib/types";
 import { useSession, useToast } from "@/components/providers";
 import { CloseAgreementDialog, type CloseAs } from "@/components/close-agreement";
@@ -269,7 +270,7 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
                 <th className="px-4 py-2.5 font-medium">Reja</th>
                 <th className="px-4 py-2.5 font-medium">Summa</th>
                 <th className="px-4 py-2.5 font-medium">Muddat</th>
-                <th className="w-40 px-4 py-2.5 font-medium">Bajarilishi</th>
+                <th className="w-56 px-4 py-2.5 font-medium">O&apos;zlashtirish</th>
                 <th className="px-4 py-2.5 font-medium">Holati</th>
                 {showActions && <th className="px-4 py-2.5 text-right font-medium">Amal</th>}
               </tr>
@@ -298,7 +299,7 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap tabular-nums">{formatMoney(a.amount, a.currency)}</td>
+                    <td className="px-4 py-3 font-semibold whitespace-nowrap tabular-nums">{formatMoney(a.amount, a.currency)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {formatDate(a.deadline)}
                       {a.status === "ACTIVE" && (
@@ -308,10 +309,7 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <ProgressBar value={a.progress} />
-                        <span className="text-xs tabular-nums">{a.progress}%</span>
-                      </div>
+                      <MoneyProgress a={a} />
                     </td>
                     <td className="px-4 py-3">
                       <AgreementStatusBadge status={a.displayStatus} />
@@ -374,6 +372,108 @@ function modelLabel(model: string) {
   if (model === "heuristic") return "oddiy hisob-kitob (AI kaliti sozlanmagan)";
   if (model === AI_FAILED_MODEL) return "oddiy hisob-kitob (AI javob bermadi — keyinroq qayta tahlil qiling)";
   return model;
+}
+
+/** How far each agreement has got: its percentage and the latest work recorded in monitoring. */
+function AbsorptionTab({ plan }: { plan: PlanDetail }) {
+  const overall = overallAbsorption(plan.agreements);
+  const totals = moneyTotals(plan.agreements);
+  const fulfilled = plan.agreements.filter((a) => a.status === "COMPLETED").length;
+  return (
+    <Card>
+      <CardHeader
+        title="O'zlashtirish"
+        icon="monitoring"
+        description="Kelishuvlar bo'yicha qilingan ishlar va ularning foizi"
+      />
+      {plan.agreements.length === 0 ? (
+        <div className="p-5">
+          <EmptyState icon="monitoring" title="Kelishuvlar hali kiritilmagan" />
+        </div>
+      ) : (
+        <>
+          <div className="border-b p-5">
+            <div className="mb-1.5 flex flex-wrap justify-between gap-2 text-sm">
+              <span className="font-medium">Umumiy o&apos;zlashtirish</span>
+              <span className="tabular-nums">
+                <b>{overall}%</b>
+                <span className="text-muted-foreground">
+                  {" "}
+                  · yakunlangan {fulfilled} / {plan.agreements.length}
+                </span>
+              </span>
+            </div>
+            <ProgressBar value={overall} className="h-2" />
+            {totals.map((t) => (
+              <div key={t.currency} className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div>
+                  <div className="text-xs text-muted-foreground">Shartnoma summasi</div>
+                  <div className="text-xl font-semibold tabular-nums">{formatMoney(t.amount, t.currency)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Tushdi</div>
+                  <div className="text-xl font-semibold text-emerald-700 tabular-nums">{formatMoney(t.absorbed, t.currency)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Qoldi</div>
+                  <div className="text-xl font-semibold tabular-nums">{formatMoney(t.remaining, t.currency)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[960px] text-sm">
+              <thead className="border-b bg-muted/40 text-left text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2.5 font-medium">Kelishuv</th>
+                  <th className="px-4 py-2.5 font-medium">Shartnoma summasi</th>
+                  <th className="px-4 py-2.5 font-medium">Qoldi</th>
+                  <th className="w-56 px-4 py-2.5 font-medium">O&apos;zlashtirish</th>
+                  <th className="px-4 py-2.5 font-medium">Oxirgi qilingan ish</th>
+                </tr>
+              </thead>
+              <tbody>
+                {plan.agreements.map((a) => {
+                  const latest = a.updates?.[0];
+                  return (
+                    <ClickableRow key={a.id} href={`/agreements/${a.id}`} className="border-b align-top last:border-0 hover:bg-muted/30">
+                      <td className="px-4 py-3">
+                        <Link href={`/agreements/${a.id}`} className="font-medium hover:text-primary hover:underline">
+                          {a.title}
+                        </Link>
+                        <div className="mt-1">
+                          <AgreementStatusBadge status={a.displayStatus} />
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-semibold whitespace-nowrap tabular-nums">{formatMoney(a.amount, a.currency)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                        {a.amount === null ? "—" : formatMoney(remainingAmount({ amount: a.amount, absorbedAmount: a.absorbedAmount }), a.currency)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <MoneyProgress a={a} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {latest ? (
+                          <>
+                            <div className="line-clamp-2">{latest.note}</div>
+                            <div className="mt-0.5 text-xs text-muted-foreground">
+                              {latest.createdBy.fullName} · {formatDateTime(latest.createdAt)} · {a._count.updates} ta izoh
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">Izoh yo&apos;q</span>
+                        )}
+                      </td>
+                    </ClickableRow>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </Card>
+  );
 }
 
 function AnalysisTab({ plan }: { plan: PlanDetail }) {
@@ -661,7 +761,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
   const router = useRouter();
   const toast = useToast();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"roadmap" | "agreements" | "analysis" | "history">("roadmap");
+  const [tab, setTab] = useState<"roadmap" | "agreements" | "absorption" | "analysis" | "history">("roadmap");
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectComment, setRejectComment] = useState("");
   const [agreementFor, setAgreementFor] = useState<string | null | undefined>(undefined);
@@ -833,6 +933,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
         items={[
           { value: "roadmap", label: "Rejalar", icon: "route", count: plan.items.length },
           { value: "agreements", label: "Kelishuvlar", icon: "handshake", count: plan.agreements.length },
+          { value: "absorption", label: "O'zlashtirish", icon: "monitoring" },
           {
             value: "analysis",
             label: plan.analyses[0] ? `AI tahlil · ${plan.analyses[0].score}%` : "AI tahlil",
@@ -844,6 +945,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
 
       {tab === "roadmap" && <RoadmapTab plan={plan} onAddAgreement={(itemId) => setAgreementFor(itemId)} />}
       {tab === "agreements" && <AgreementsTab plan={plan} onAdd={() => setAgreementFor(null)} />}
+      {tab === "absorption" && <AbsorptionTab plan={plan} />}
       {tab === "analysis" && <AnalysisTab plan={plan} />}
       {tab === "history" && <HistoryTab plan={plan} />}
 

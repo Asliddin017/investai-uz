@@ -5,11 +5,12 @@ import { use, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatBytes, formatDate, formatDateTime, formatMoney } from "@/lib/client";
 import { uploadAgreementFiles } from "@/lib/upload";
-import { CLOSE_NEEDS_DOCUMENT } from "@/lib/labels";
+import { CLOSE_NEEDS_DOCUMENT, progressFromMoney, remainingAmount } from "@/lib/labels";
 import { CloseAgreementDialog, type CloseAs } from "@/components/close-agreement";
 import type { AgreementDetail, PlanDetail } from "@/lib/types";
-import { useToast } from "@/components/providers";
+import { useSession, useToast } from "@/components/providers";
 import { AgreementFormDialog } from "@/components/agreement-form";
+import { AmountInput } from "@/components/amount-input";
 import { AgreementStatusBadge, documentTypeLabel } from "@/components/status";
 import {
   Button,
@@ -36,10 +37,12 @@ function Info({ label, children }: { label: string; children: React.ReactNode })
 export default function AgreementPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const toast = useToast();
+  const { user } = useSession();
   const qc = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const [note, setNote] = useState("");
   const [progress, setProgress] = useState<number | null>(null);
+  const [received, setReceived] = useState("");
   const [editOpen, setEditOpen] = useState(false);
   const [closeAs, setCloseAs] = useState<CloseAs | null>(null);
 
@@ -67,12 +70,24 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
 
   const addUpdate = useMutation({
     mutationFn: () =>
-      api(`/agreements/${id}/updates`, { method: "POST", json: { note, progress: progress ?? a?.progress ?? 0 } }),
+      api(`/agreements/${id}/updates`, { method: "POST", json: a?.amount != null ? { note, amount: received || 0 } : { note, progress: progress ?? a?.progress ?? 0 } }),
     onSuccess: async () => {
       setNote("");
       setProgress(null);
+      setReceived("");
       await refresh();
       toast("Holat saqlandi");
+    },
+    onError: (e) => toast(e.message, "error"),
+  });
+
+  const removeUpdate = useMutation({
+    mutationFn: (updateId: string) => api(`/agreements/${id}/updates/${updateId}`, { method: "DELETE" }),
+    onSuccess: async () => {
+      setProgress(null);
+      await refresh();
+      await qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast("Izoh o'chirildi");
     },
     onError: (e) => toast(e.message, "error"),
   });
@@ -103,6 +118,9 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
 
   const left = daysUntil(a.deadline);
   const currentProgress = progress ?? a.progress;
+  const remaining = a.amount === null ? 0 : remainingAmount({ amount: a.amount, absorbedAmount: a.absorbedAmount });
+  const receivedNow = Number(received) || 0;
+  const tooMuch = a.amount !== null && receivedNow > remaining;
 
   return (
     <div className="space-y-5">
@@ -156,10 +174,25 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
         <div className="space-y-5">
           <Card className="p-5">
+            {a.amount !== null && (
+              <div className="mb-4 grid gap-4 border-b pb-4 sm:grid-cols-3">
+                <div>
+                  <div className="text-xs text-muted-foreground">Shartnoma summasi</div>
+                  <div className="mt-0.5 text-2xl font-semibold tabular-nums">{formatMoney(a.amount, a.currency)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Tushdi</div>
+                  <div className="mt-0.5 text-2xl font-semibold text-emerald-700 tabular-nums">{formatMoney(a.absorbedAmount, a.currency)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Qoldi</div>
+                  <div className="mt-0.5 text-2xl font-semibold tabular-nums">{formatMoney(remaining, a.currency)}</div>
+                </div>
+              </div>
+            )}
             <div className="grid gap-4 sm:grid-cols-3">
               <Info label="Hujjat raqami">{a.documentNumber}</Info>
               <Info label="Imzolangan">{formatDate(a.signedDate)}</Info>
-              <Info label="Summa">{formatMoney(a.amount, a.currency)}</Info>
               <Info label="Amalga oshish muddati">
                 {formatDate(a.deadline)}
                 {a.status === "ACTIVE" && (
@@ -174,7 +207,7 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
             {a.description && <p className="mt-4 border-t pt-4 text-sm">{a.description}</p>}
             <div className="mt-4 border-t pt-4">
               <div className="mb-1.5 flex justify-between text-sm">
-                <span className="font-medium">Bajarilishi</span>
+                <span className="font-medium">O&apos;zlashtirish</span>
                 <span className="tabular-nums">{a.progress}%</span>
               </div>
               <ProgressBar value={a.progress} className="h-2" />
@@ -198,26 +231,46 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
                   />
                 </Field>
                 <div className="flex flex-wrap items-end gap-3">
-                  <Field label={`Bajarilish: ${currentProgress}%`} className="min-w-[200px] flex-1">
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={5}
-                      value={currentProgress}
-                      onChange={(e) => setProgress(Number(e.target.value))}
-                      className="w-full accent-[var(--primary)]"
-                    />
-                  </Field>
+                  {a.amount === null ? (
+                    <Field label={`O'zlashtirish: ${currentProgress}%`} className="min-w-[200px] flex-1">
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={currentProgress}
+                        onChange={(e) => setProgress(Number(e.target.value))}
+                        className="w-full accent-[var(--primary)]"
+                      />
+                    </Field>
+                  ) : remaining > 0 ? (
+                    <Field
+                      label={`Tushgan summa${a.currency ? ` (${a.currency})` : ""}`}
+                      hint={`Qolgan: ${formatMoney(remaining, a.currency)}. Faqat izoh bo'lsa, bo'sh qoldiring.`}
+                      className="min-w-[260px] flex-1"
+                    >
+                      <AmountInput value={received} onChange={setReceived} />
+                    </Field>
+                  ) : (
+                    <p className="flex-1 text-sm font-medium text-emerald-700">Summa to&apos;liq tushgan</p>
+                  )}
                   <Button
                     icon="save"
                     loading={addUpdate.isPending}
-                    disabled={note.trim().length < 3}
+                    disabled={note.trim().length < 3 || tooMuch}
                     onClick={() => addUpdate.mutate()}
                   >
                     Holatni saqlash
                   </Button>
                 </div>
+                {tooMuch && (
+                  <p className="text-xs font-medium text-destructive">Qolgan summadan ko&apos;p kiritib bo&apos;lmaydi: {formatMoney(remaining, a.currency)}</p>
+                )}
+                {a.amount !== null && receivedNow > 0 && !tooMuch && (
+                  <p className="text-xs text-muted-foreground">
+                    Saqlangach: {formatMoney(a.absorbedAmount + receivedNow, a.currency)} — {progressFromMoney(a.amount, a.absorbedAmount + receivedNow)}%
+                  </p>
+                )}
                 {note.trim().length < 3 && (
                   <p className="text-xs text-muted-foreground">Saqlash uchun avval nima bajarilganini yozing.</p>
                 )}
@@ -234,14 +287,28 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
                     <div className="flex h-9 w-12 shrink-0 items-center justify-center rounded-md bg-primary-soft text-xs font-semibold text-primary tabular-nums">
                       {u.progress}%
                     </div>
-                    <div className="text-sm">
-                      <div>{u.note}</div>
+                    <div className="min-w-0 flex-1 text-sm">
+                      {u.amount !== null && (
+                        <div className="font-semibold text-emerald-700 tabular-nums">+{formatMoney(u.amount, a.currency)} tushdi</div>
+                      )}
+                      <div className="whitespace-pre-line">{u.note}</div>
                       <div className="mt-0.5 text-xs text-muted-foreground">
                         {u.createdBy.fullName}
                         {u.createdBy.username && <span className="font-mono"> @{u.createdBy.username}</span>} ·{" "}
                         {formatDateTime(u.createdAt)}
                       </div>
                     </div>
+                    {a.can.monitor && u.createdBy.id === user.id && (
+                      <button
+                        onClick={() => confirm("Bu izoh o'chirilsinmi?") && removeUpdate.mutate(u.id)}
+                        disabled={removeUpdate.isPending}
+                        className="h-fit shrink-0 text-muted-foreground hover:text-destructive disabled:opacity-50"
+                        aria-label="Izohni o'chirish"
+                        title="Izohni o'chirish"
+                      >
+                        <MSIcon name="delete" className="text-[18px]" />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ol>

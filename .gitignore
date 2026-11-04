@@ -60,3 +60,6 @@ npm-debug.log*
 /docs/InvestAI-taqdimot.pptx
 /docs/infografika.html
 /docs/infografika.png
+
+# Source spreadsheets and import backups: real data, not for the repo
+/feedback/

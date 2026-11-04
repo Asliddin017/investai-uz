@@ -5,8 +5,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatDate, formatMoney } from "@/lib/client";
 import type { AgreementListItem } from "@/lib/types";
+import { MoneyProgress } from "@/components/money-progress";
 import { AgreementStatusBadge, documentTypeLabel } from "@/components/status";
-import { Card, ClickableRow, EmptyState, ErrorBox, Input, MSIcon, PageHeader, ProgressBar, Select, Spinner } from "@/components/ui";
+import { Card, ClickableRow, EmptyState, ErrorBox, Input, MSIcon, PageHeader, Select, Spinner } from "@/components/ui";
 
 const FILTERS = [
   { value: "", label: "Barchasi" },
@@ -71,7 +72,7 @@ export default function AgreementsPage() {
                 <th className="px-4 py-2.5 font-medium">Reja</th>
                 <th className="px-4 py-2.5 font-medium">Summa</th>
                 <th className="px-4 py-2.5 font-medium">Muddat</th>
-                <th className="w-40 px-4 py-2.5 font-medium">Bajarilishi</th>
+                <th className="w-56 px-4 py-2.5 font-medium">O&apos;zlashtirish</th>
                 <th className="px-4 py-2.5 font-medium">Holati</th>
               </tr>
             </thead>
@@ -98,7 +99,7 @@ export default function AgreementsPage() {
                         {a.plan.department ? ` · ${a.plan.department.name}` : ""}
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap tabular-nums">{formatMoney(a.amount, a.currency)}</td>
+                    <td className="px-4 py-3 font-semibold whitespace-nowrap tabular-nums">{formatMoney(a.amount, a.currency)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {formatDate(a.deadline)}
                       {a.status === "ACTIVE" && (
@@ -108,10 +109,7 @@ export default function AgreementsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <ProgressBar value={a.progress} />
-                        <span className="text-xs tabular-nums">{a.progress}%</span>
-                      </div>
+                      <MoneyProgress a={a} />
                       <div className="mt-0.5 text-xs text-muted-foreground">{a._count.updates} ta yozuv</div>
                     </td>
                     <td className="px-4 py-3">
