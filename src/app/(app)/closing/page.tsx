@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn, daysUntil, formatDate } from "@/lib/client";
+import { CLOSE_NEEDS_DOCUMENT } from "@/lib/labels";
 import { useSession } from "@/components/providers";
 import { CloseAgreementDialog, type CloseAs } from "@/components/close-agreement";
 import { isReadyToClose, useOpenAgreements } from "@/components/open-agreements";
@@ -64,6 +65,7 @@ export default function ClosingPage() {
                       <div className="text-xs text-muted-foreground">
                         {documentTypeLabel(a.documentType)} · {a.partner}
                       </div>
+                      {a._count.attachments === 0 && <div className="text-xs text-amber-700">Asos hujjati biriktirilmagan</div>}
                     </td>
                     <td className="px-4 py-3">
                       <Link href={`/plans/${a.plan.id}`} className="hover:underline">
@@ -88,9 +90,17 @@ export default function ClosingPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1.5">
-                        <Button size="sm" variant="success" icon="task_alt" onClick={() => setClosing({ id: a.id, as: "COMPLETED" })}>
-                          Yakunlash
-                        </Button>
+                        <span title={a._count.attachments === 0 ? CLOSE_NEEDS_DOCUMENT : undefined}>
+                          <Button
+                            size="sm"
+                            variant="success"
+                            icon="task_alt"
+                            disabled={a._count.attachments === 0}
+                            onClick={() => setClosing({ id: a.id, as: "COMPLETED" })}
+                          >
+                            Yakunlash
+                          </Button>
+                        </span>
                         <Button
                           size="sm"
                           variant="ghost"

@@ -34,15 +34,17 @@ export const GET = withUser(async ({ req, user }) => {
       department: { select: { id: true, name: true } },
       items: { select: { result: true } },
       _count: { select: { agreements: true } },
+      agreements: { where: { status: "COMPLETED" }, select: { id: true } },
       analyses: { orderBy: { createdAt: "desc" }, take: 1, select: { score: true } },
     },
   });
 
-  return plans.map(({ items, analyses, ...p }) => ({
+  return plans.map(({ items, analyses, agreements, ...p }) => ({
     ...p,
     itemCount: items.length,
     achievedCount: items.filter((i) => i.result === "ACHIEVED").length,
     notAchievedCount: items.filter((i) => i.result === "NOT_ACHIEVED").length,
+    completedAgreementCount: agreements.length,
     score: analyses[0]?.score ?? null,
   }));
 });

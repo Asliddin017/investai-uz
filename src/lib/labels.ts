@@ -1,5 +1,7 @@
 import type { AgreementStatus, DepartmentType, DocumentType, ItemResult, PlanStatus } from "@prisma/client";
 
+export const CLOSE_NEEDS_DOCUMENT = "Yakunlash uchun avval asos hujjatini biriktiring";
+
 export const PLAN_STATUS_LABELS: Record<PlanStatus, string> = {
   DRAFT: "Qoralama",
   PENDING: "Tasdiqlashda",

@@ -6,7 +6,7 @@ Viloyat hokimligi uchun xorijiy investitsiya safarlarini rejadan kelishuv yakuni
 
 1. **Reja tuziladi** — viloyat apparati o'rinbosarlari, boshqarma boshliqlari, tuman/shahar hokimlari kiritadi: nomi, maqsadi, muddati, yo'l xaritasi (bandlar).
 2. **Tasdiqlanadi** — viloyat apparati investitsiya bo'limi kotibiyat mudiri tasdiqlaydi yoki sababini yozib rad etadi. Rad etilgan reja muallifga tahrirlash uchun qaytadi. Har yuborilgan variant tarixda o'zgarmas saqlanadi (v1 — dastlabki). Tasdiqlangan reja o'zgartirilmaydi.
-3. **Safar natijalari** — har bir band: erishildi / erishilmadi (sababi bilan). Erishilgan kelishuvlar (shartnoma, memorandum, bitim) amalga oshish muddati va asos hujjatlari bilan biriktiriladi. Rejada yo'q kelishuv — qo'shimcha yutuq.
+3. **Safar natijalari** — har bir band: erishildi / erishilmadi (sababi bilan). Erishilgan kelishuvlar (shartnoma, memorandum, bitim) amalga oshish muddati va asos hujjatlari bilan biriktiriladi. Rejada yo'q kelishuv — qo'shimcha yutuq. Kelishuvni qo'shishda muddat majburiy; hujjat keyin biriktirilishi mumkin, lekin hujjatsiz kelishuv yakunlanmaydi (bekor qilish mumkin).
 4. **AI tahlil** — hisobot yakunlanganda Gemini reja bilan natija mosligini foizda baholaydi (`GEMINI_API_KEY` bo'lmasa oddiy hisob-kitob ishlaydi).
 5. **Kelishuv monitoringi** — muddat davomida bajarilgan ishlar yozib boriladi; barcha kelishuvlar yopilganda reja yakunlanadi.
 

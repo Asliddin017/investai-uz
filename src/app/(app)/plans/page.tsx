@@ -125,7 +125,16 @@ export default function PlansPage() {
                       p.itemCount
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center tabular-nums">{p._count.agreements}</td>
+                  <td className="px-4 py-3 text-center tabular-nums">
+                    {p._count.agreements > 0 ? (
+                      <span title="Yakunlangan / jami">
+                        <span className="font-medium text-emerald-700">{p.completedAgreementCount}</span>
+                        <span className="text-muted-foreground"> / {p._count.agreements}</span>
+                      </span>
+                    ) : (
+                      0
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-center tabular-nums">
                     {p.score === null ? <span className="text-muted-foreground">—</span> : <b>{p.score}%</b>}
                   </td>

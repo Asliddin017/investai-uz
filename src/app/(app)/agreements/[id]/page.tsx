@@ -5,6 +5,7 @@ import { use, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatBytes, formatDate, formatDateTime, formatMoney } from "@/lib/client";
 import { uploadAgreementFiles } from "@/lib/upload";
+import { CLOSE_NEEDS_DOCUMENT } from "@/lib/labels";
 import { CloseAgreementDialog, type CloseAs } from "@/components/close-agreement";
 import type { AgreementDetail, PlanDetail } from "@/lib/types";
 import { useToast } from "@/components/providers";
@@ -135,10 +136,18 @@ export default function AgreementPage({ params }: { params: Promise<{ id: string
                 <Button variant="ghost" icon="block" onClick={() => setCloseAs("CANCELLED")}>
                   Bekor qilish
                 </Button>
-                <Button variant="success" icon="task_alt" onClick={() => setCloseAs("COMPLETED")}>
+                <Button
+                  variant="success"
+                  icon="task_alt"
+                  disabled={a.attachments.length === 0}
+                  onClick={() => setCloseAs("COMPLETED")}
+                >
                   Yakunlash
                 </Button>
               </>
+            )}
+            {a.can.complete && a.attachments.length === 0 && (
+              <p className="w-full text-right text-xs text-amber-700">{CLOSE_NEEDS_DOCUMENT}</p>
             )}
           </div>
         </div>

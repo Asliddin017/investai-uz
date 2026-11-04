@@ -23,6 +23,7 @@ export type PlanListItem = {
   itemCount: number;
   achievedCount: number;
   notAchievedCount: number;
+  completedAgreementCount: number;
   score: number | null;
   _count: { agreements: number };
 };

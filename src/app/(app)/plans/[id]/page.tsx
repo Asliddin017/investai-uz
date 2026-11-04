@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatDate, formatDateTime, formatMoney } from "@/lib/client";
+import { CLOSE_NEEDS_DOCUMENT } from "@/lib/labels";
 import type { ItemResult, PlanDetail, PlanItem, PlanStatus } from "@/lib/types";
 import { useSession, useToast } from "@/components/providers";
 import { CloseAgreementDialog, type CloseAs } from "@/components/close-agreement";
@@ -229,6 +230,7 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
   const qc = useQueryClient();
   const [closing, setClosing] = useState<{ id: string; as: CloseAs } | null>(null);
   const extra = plan.agreements.filter((a) => !a.planItemId);
+  const fulfilled = plan.agreements.filter((a) => a.status === "COMPLETED").length;
   // Closing is the approver's step; offer it here so they need not open each agreement.
   const canClose = (a: PlanDetail["agreements"][number]) => can("agreement:complete") && a.status === "ACTIVE";
   const showActions = plan.agreements.some(canClose);
@@ -237,7 +239,11 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
       <CardHeader
         title="Erishilgan kelishuvlar"
         icon="handshake"
-        description="Har bir kelishuv amalga oshish muddatigacha monitoring qilinadi"
+        description={
+          plan.agreements.length > 0
+            ? `O'zlashtirilgan loyihalar: ${fulfilled} / ${plan.agreements.length} (yakunlangan kelishuvlar)`
+            : "Har bir kelishuv amalga oshish muddatigacha monitoring qilinadi"
+        }
         actions={
           plan.can.manageAgreements && (
             <Button size="sm" icon="add" onClick={onAdd}>
@@ -314,9 +320,17 @@ function AgreementsTab({ plan, onAdd }: { plan: PlanDetail; onAdd: () => void })
                       <td className="px-4 py-3">
                         {canClose(a) && (
                           <div className="flex justify-end gap-1.5">
-                            <Button size="sm" variant="success" icon="task_alt" onClick={() => setClosing({ id: a.id, as: "COMPLETED" })}>
-                              Yakunlash
-                            </Button>
+                            <span title={a._count.attachments === 0 ? CLOSE_NEEDS_DOCUMENT : undefined}>
+                              <Button
+                                size="sm"
+                                variant="success"
+                                icon="task_alt"
+                                disabled={a._count.attachments === 0}
+                                onClick={() => setClosing({ id: a.id, as: "COMPLETED" })}
+                              >
+                                Yakunlash
+                              </Button>
+                            </span>
                             <Button
                               size="sm"
                               variant="ghost"

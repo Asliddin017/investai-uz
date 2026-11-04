@@ -9,7 +9,7 @@ const NEW_REPORT_DAYS = 30;
 
 type Task = {
   id: string;
-  kind: "approve" | "new_report" | "fix" | "submit" | "results" | "close_report" | "close_agreement" | "overdue" | "name_request";
+  kind: "approve" | "new_report" | "fix" | "submit" | "results" | "close_report" | "close_agreement" | "attach_document" | "overdue" | "name_request";
   title: string;
   hint: string;
   href: string;
@@ -131,21 +131,47 @@ export const GET = withUser(async ({ user }) => {
     }
   }
 
-  const closable = new Set<string>();
+  // Fully done agreements get one clear next step, so they are not listed as overdue as well.
+  const handled = new Set<string>();
   if (p.has("agreement:complete")) {
     const done = await db.agreement.findMany({
-      where: { status: "ACTIVE", progress: { gte: 100 }, plan: planVisibilityWhere(user) },
+      where: { status: "ACTIVE", progress: { gte: 100 }, attachments: { some: {} }, plan: planVisibilityWhere(user) },
       orderBy: { deadline: "asc" },
       take: 20,
       select: { id: true, title: true, partner: true },
     });
     for (const a of done) {
-      closable.add(a.id);
+      handled.add(a.id);
       tasks.push({
         id: `closing-${a.id}`,
         kind: "close_agreement",
         title: a.title,
         hint: `100% bajarildi — natijani qabul qilib yoping · ${a.partner}`,
+        href: `/agreements/${a.id}`,
+      });
+    }
+  }
+
+  if (p.has("agreement:manage")) {
+    // Only the author's side can attach files, and the approver cannot close without one.
+    const undocumented = await db.agreement.findMany({
+      where: {
+        status: "ACTIVE",
+        progress: { gte: 100 },
+        attachments: { none: {} },
+        plan: { AND: [mine, { status: { in: ["APPROVED", "REPORTED"] } }] },
+      },
+      orderBy: { deadline: "asc" },
+      take: 20,
+      select: { id: true, title: true },
+    });
+    for (const a of undocumented) {
+      handled.add(a.id);
+      tasks.push({
+        id: `attach-${a.id}`,
+        kind: "attach_document",
+        title: a.title,
+        hint: "100% bajarildi — yakunlash uchun asos hujjatini biriktiring",
         href: `/agreements/${a.id}`,
       });
     }
@@ -159,7 +185,7 @@ export const GET = withUser(async ({ user }) => {
       select: { id: true, title: true, deadline: true },
     });
     for (const a of overdue) {
-      if (closable.has(a.id)) continue;
+      if (handled.has(a.id)) continue;
       tasks.push({
         id: `overdue-${a.id}`,
         kind: "overdue",

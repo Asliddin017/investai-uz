@@ -1,10 +1,11 @@
 import { db } from "@/lib/db";
-import { forbidden, withUser } from "@/lib/api";
+import { badRequest, forbidden, withUser } from "@/lib/api";
 import { loadAgreementForUser, serializeAgreement } from "@/lib/agreements";
 import { completePlanIfDone } from "@/lib/plans";
 import { agreementStatusInput } from "@/lib/schemas";
 import { audit } from "@/lib/audit";
 import { markAgreementSeen } from "@/lib/inbox";
+import { CLOSE_NEEDS_DOCUMENT } from "@/lib/labels";
 
 /** Ends monitoring: the agreement is fulfilled or cancelled. */
 export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
@@ -12,6 +13,7 @@ export const POST = withUser<{ id: string }>(async ({ req, user, params }) => {
   if (!serializeAgreement(user, agreement).can.complete) throw forbidden("Kelishuvni yakunlashga ruxsat yo'q");
   const { status, note } = agreementStatusInput.parse(await req.json());
   const completed = status === "COMPLETED";
+  if (completed && agreement.attachments.length === 0) throw badRequest(CLOSE_NEEDS_DOCUMENT);
 
   await db.$transaction([
     db.agreementUpdate.create({

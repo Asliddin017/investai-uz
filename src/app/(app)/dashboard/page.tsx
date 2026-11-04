@@ -127,6 +127,7 @@ export default function DashboardPage() {
   const maxStatus = Math.max(1, ...Object.values(data.plansByStatus).map((v) => v ?? 0));
   const activeAgreements = data.agreementsByStatus.ACTIVE ?? 0;
   const unseenUpdates = data.recentUpdates.filter((u) => u.unseen).length;
+  const agreementsTotal = Object.values(data.agreementsByStatus).reduce((s, v) => s + (v ?? 0), 0);
 
   return (
     <div className="space-y-6">
@@ -134,7 +135,7 @@ export default function DashboardPage() {
 
       <MyTasks />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <StatTile label="Jami safarlar" value={plansTotal} icon="flight_takeoff" href="/plans" />
         <StatTile
           label="Tasdiqlashda"
@@ -150,6 +151,13 @@ export default function DashboardPage() {
           icon="warning"
           tone={data.overdueAgreements > 0 ? "critical" : "default"}
           hint="faol kelishuvlar"
+          href="/agreements"
+        />
+        <StatTile
+          label="O'zlashtirilgan loyihalar"
+          value={`${data.agreementsByStatus.COMPLETED ?? 0}/${agreementsTotal}`}
+          icon="task_alt"
+          hint="yakunlangan kelishuvlar"
           href="/agreements"
         />
         <StatTile

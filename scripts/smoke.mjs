@@ -384,6 +384,9 @@ await author(`/plans/${dashPlanId}/items/${dashItem.id}/result`, { method: "PUT"
 const dashAgreementBody = { title: "Smoke: dashboard kelishuvi", partner: "Hamkor", documentType: "SHARTNOMA", deadline: "2035-01-01" };
 r = await author(`/plans/${dashPlanId}/agreements`, { method: "POST", json: dashAgreementBody });
 const dashAgreementId = r.data.id;
+r = await author(`/plans/${dashPlanId}/agreements`, { method: "POST", json: { ...dashAgreementBody, title: "Smoke: bekor qilinadigan" } });
+r = await approver(`/agreements/${r.data.id}/status`, { method: "POST", json: { status: "CANCELLED", note: "Hamkor voz kechdi" } });
+check("hujjatsiz kelishuvni bekor qilish mumkin", r.status === 200, JSON.stringify(r.data));
 
 const dashEntry = async (who) => (await who("/dashboard")).data.recentUpdates.find((u) => u.agreementId === dashAgreementId);
 const hasTask = async (who, kind, target) => (await who("/tasks")).data.some((t) => t.kind === kind && t.href.endsWith(target));
@@ -403,6 +406,14 @@ check("kelishuv ochilgach belgi yo'qoladi", (await dashEntry(approver))?.unseen 
 await author(`/agreements/${dashAgreementId}/updates`, { method: "POST", json: { note: "Yakunlandi", progress: 100 } });
 check("keyingi yozuv yana yangi", (await dashEntry(approver))?.unseen === true);
 
+check("hujjatsiz 100% — muallifda hujjat vazifasi", await hasTask(author, "attach_document", dashAgreementId));
+check("hujjatsiz 100% — tasdiqlovchida yopish vazifasi yo'q", !(await hasTask(approver, "close_agreement", dashAgreementId)));
+r = await approver(`/agreements/${dashAgreementId}/status`, { method: "POST", json: { status: "COMPLETED" } });
+check("hujjatsiz kelishuv yakunlanmaydi", r.status === 400, JSON.stringify(r.data));
+const dashForm = new FormData();
+dashForm.append("files", new Blob(["%PDF-1.4 smoke"], { type: "application/pdf" }), "dalolatnoma.pdf");
+await author(`/agreements/${dashAgreementId}/attachments`, { method: "POST", body: dashForm });
+check("hujjatdan keyin muallif vazifasi yo'qoladi", !(await hasTask(author, "attach_document", dashAgreementId)));
 check("100% kelishuv tasdiqlovchi vazifasida", await hasTask(approver, "close_agreement", dashAgreementId));
 check("muallifda yopish vazifasi yo'q", !(await hasTask(author, "close_agreement", dashAgreementId)));
 await author(`/agreements/${dashAgreementId}`, { method: "PUT", json: { ...dashAgreementBody, deadline: "2020-01-01" } });
@@ -416,6 +427,9 @@ await approver(`/agreements/${dashAgreementId}/status`, { method: "POST", json: 
 check("yopilgan kelishuv vazifadan chiqadi", !(await hasTask(approver, "close_agreement", dashAgreementId)));
 check("yopgan odam uchun yozuvlar yangi emas", (await unseenCount(approver)) === 0);
 check("yopilgan kelishuv faol ro'yxatdan chiqadi", !(await activeIds(approver)).includes(dashAgreementId));
+r = await approver("/plans");
+const dashRow = r.data.find((p) => p.id === dashPlanId);
+check("o'zlashtirilgan loyihalar: bekor qilingan hisobga kirmaydi", dashRow?.completedAgreementCount === 1 && dashRow?._count.agreements === 2, JSON.stringify(dashRow?._count));
 
 console.log(failures === 0 ? "\nHAMMASI O'TDI" : `\n${failures} ta tekshiruv O'TMADI`);
 process.exit(failures === 0 ? 0 : 1);
