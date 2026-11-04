@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
+import { useRememberedState } from "@/components/remembered-state";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatDate, formatDateTime, formatMoney } from "@/lib/client";
 import { CLOSE_NEEDS_DOCUMENT, moneyTotals, overallAbsorption, remainingAmount } from "@/lib/labels";
@@ -761,7 +762,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
   const router = useRouter();
   const toast = useToast();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"roadmap" | "agreements" | "absorption" | "analysis" | "history">("roadmap");
+  const [tab, setTab] = useRememberedState<"roadmap" | "agreements" | "absorption" | "analysis" | "history">(`plan-tab:${id}`, "roadmap");
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectComment, setRejectComment] = useState("");
   const [agreementFor, setAgreementFor] = useState<string | null | undefined>(undefined);

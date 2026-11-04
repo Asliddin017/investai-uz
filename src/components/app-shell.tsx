@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, cn } from "@/lib/client";
+import { clearNavMemory, recall, remember, sectionLink, sectionOf } from "@/lib/nav-memory";
 import { useSession } from "./providers";
 import { MSIcon } from "./ui";
 import { usePendingNameRequests } from "./name-requests-panel";
@@ -35,11 +36,44 @@ const NAV: { section?: string; items: NavItem[] }[] = [
   },
 ];
 
+const SECTIONS = NAV.flatMap((group) => group.items.map((item) => item.href));
+/** Long enough for a page's cached content to render, short enough not to fight the user's own scrolling. */
+const SCROLL_RESTORE_MS = 1000;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, can } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const resuming = useRef(false);
+
+  // Each section remembers the page it was left on.
+  useEffect(() => {
+    const section = sectionOf(pathname, SECTIONS);
+    if (section) remember(`nav:${section}`, pathname);
+  }, [pathname]);
+
+  // And each page its scroll position, restored only when returning through the sidebar.
+  useEffect(() => {
+    const target = resuming.current ? recall(`scroll:${pathname}`, 0) : 0;
+    resuming.current = false;
+    const key = `scroll:${pathname}`;
+    const onScroll = () => remember(key, window.scrollY);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    if (target === 0) return () => window.removeEventListener("scroll", onScroll);
+
+    const started = performance.now();
+    let frame = requestAnimationFrame(function restore() {
+      window.scrollTo(0, target);
+      if (window.scrollY < target - 1 && performance.now() - started < SCROLL_RESTORE_MS) {
+        frame = requestAnimationFrame(restore);
+      }
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [pathname]);
 
   const pendingNames = usePendingNameRequests(can("admin:users")).data?.length ?? 0;
   const taskCount = useMyTasks().data?.length ?? 0;
@@ -56,6 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   async function logout() {
     await api("/auth/logout", { method: "POST" }).catch(() => undefined);
+    clearNavMemory();
     router.replace("/login");
     router.refresh();
   }
@@ -90,8 +125,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   return (
                     <li key={item.href}>
                       <Link
-                        href={item.href}
-                        onClick={() => setOpen(false)}
+                        href={sectionLink(item.href, pathname)}
+                        onClick={() => {
+                          resuming.current = !active;
+                          setOpen(false);
+                        }}
                         className={cn(
                           "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                           active ? "bg-sidebar-active font-medium text-white" : "hover:bg-white/5 hover:text-white",

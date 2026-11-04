@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRememberedState } from "@/components/remembered-state";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api, cn, formatDateTime } from "@/lib/client";
 import { useSession } from "@/components/providers";
@@ -57,11 +57,11 @@ function entityHref(item: AuditItem) {
 
 export default function AuditPage() {
   const { can } = useSession();
-  const [action, setAction] = useState("");
-  const [q, setQ] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [page, setPage] = useState(1);
+  const [action, setAction] = useRememberedState("audit:action", "");
+  const [q, setQ] = useRememberedState("audit:q", "");
+  const [from, setFrom] = useRememberedState("audit:from", "");
+  const [to, setTo] = useRememberedState("audit:to", "");
+  const [page, setPage] = useRememberedState("audit:page", 1);
 
   const params = new URLSearchParams({ page: String(page) });
   if (action) params.set("action", action);

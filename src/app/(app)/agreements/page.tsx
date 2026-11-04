@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRememberedState } from "@/components/remembered-state";
 import { useQuery } from "@tanstack/react-query";
 import { api, cn, daysUntil, formatDate, formatMoney } from "@/lib/client";
 import type { AgreementListItem } from "@/lib/types";
@@ -18,8 +18,8 @@ const FILTERS = [
 ];
 
 export default function AgreementsPage() {
-  const [status, setStatus] = useState("ACTIVE");
-  const [q, setQ] = useState("");
+  const [status, setStatus] = useRememberedState("agreements:status", "ACTIVE");
+  const [q, setQ] = useRememberedState("agreements:q", "");
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (q.trim()) params.set("q", q.trim());

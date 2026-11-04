@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRememberedState } from "@/components/remembered-state";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, cn, formatDateTime } from "@/lib/client";
 import { useSession, useToast } from "@/components/providers";
@@ -196,7 +197,7 @@ function ResetPasswordDialog({ user, onClose }: { user: UserRow; onClose: () => 
 export default function UsersPage() {
   const { can } = useSession();
   const [editing, setEditing] = useState<UserRow | null | undefined>(undefined);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useRememberedState("users:q", "");
   const [resetting, setResetting] = useState<UserRow | null>(null);
   const { user: me } = useSession();
   const { data, isLoading, error } = useQuery({

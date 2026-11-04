@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRememberedState } from "@/components/remembered-state";
 import { useQuery } from "@tanstack/react-query";
 import { api, formatDate } from "@/lib/client";
 import type { PlanListItem } from "@/lib/types";
@@ -13,9 +13,9 @@ export default function PlansPage() {
   const { user, can } = useSession();
   // The filter only matters to someone who also sees trips created by others (see planVisibilityWhere).
   const seesOthers = can("plan:view_all") || (can("plan:view_department") && !!user.departmentId);
-  const [status, setStatus] = useState("");
-  const [q, setQ] = useState("");
-  const [mine, setMine] = useState(false);
+  const [status, setStatus] = useRememberedState("plans:status", "");
+  const [q, setQ] = useRememberedState("plans:q", "");
+  const [mine, setMine] = useRememberedState("plans:mine", false);
 
   const params = new URLSearchParams();
   if (status) params.set("status", status);
