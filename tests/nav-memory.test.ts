@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { clearNavMemory, recall, remember, sectionLink, sectionOf } from "@/lib/nav-memory";
+import { bindNavMemory, clearNavMemory, recall, remember, sectionLink, sectionOf } from "@/lib/nav-memory";
 
 const SECTIONS = ["/dashboard", "/plans", "/agreements", "/admin/users"];
 
@@ -33,6 +33,24 @@ describe("sectionLink", () => {
   it("goes back to the start when already inside the section", () => {
     remember("nav:/plans", "/plans/abc");
     expect(sectionLink("/plans", "/plans/abc")).toBe("/plans");
+  });
+});
+
+describe("bindNavMemory", () => {
+  it("keeps the memory for the same user", () => {
+    bindNavMemory("a");
+    remember("plans:q", "maxfiy");
+    bindNavMemory("a");
+    expect(recall("plans:q", "")).toBe("maxfiy");
+  });
+
+  it("starts empty for another user, however the previous one left", () => {
+    bindNavMemory("a");
+    remember("plans:q", "maxfiy");
+    remember("nav:/plans", "/plans/abc");
+    bindNavMemory("b");
+    expect(recall("plans:q", "")).toBe("");
+    expect(sectionLink("/plans", "/dashboard")).toBe("/plans");
   });
 });
 

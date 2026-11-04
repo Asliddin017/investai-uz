@@ -1,7 +1,14 @@
 // Where the user was in each sidebar section: page, tab, filters and scroll position.
-// Kept in memory for the browser tab's session and cleared on logout, so nothing carries
-// over to the next person signing in on the same computer.
+// Kept in memory for the browser tab's session and tied to the signed-in user, so nothing
+// carries over to the next person, whichever way the previous one left.
 const memory = new Map<string, unknown>();
+let owner: string | null = null;
+
+/** Call before anything reads the memory: a different user starts empty. */
+export function bindNavMemory(userId: string) {
+  if (owner !== userId) memory.clear();
+  owner = userId;
+}
 
 export function remember(key: string, value: unknown) {
   memory.set(key, value);

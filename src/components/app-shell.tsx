@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, cn } from "@/lib/client";
-import { clearNavMemory, recall, remember, sectionLink, sectionOf } from "@/lib/nav-memory";
+import { bindNavMemory, clearNavMemory, recall, remember, sectionLink, sectionOf } from "@/lib/nav-memory";
 import { useSession } from "./providers";
 import { MSIcon } from "./ui";
 import { usePendingNameRequests } from "./name-requests-panel";
@@ -42,6 +42,7 @@ const SCROLL_RESTORE_MS = 1000;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, can } = useSession();
+  bindNavMemory(user.id);
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
